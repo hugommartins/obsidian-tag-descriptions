@@ -17,11 +17,16 @@ A Knowledge Management utility that allows you to assign custom definitions to y
 
 You don't need to plan your tags in advance. Use them as you write and define them on the fly. Use the right-click on a new tag and select "Set description". Type your meaning. Save it. The tooltip is now active everywhere.
 
+For frontmatter tags:
+- Adding descriptions with right-click is not supported on frontmatter tags
+- The tooltips are only visible with the properties view and not in source mode
+
 You can also manually enter tag descriptions on the plug-in settings.
 Adding a tag without an `#` will convert it into the correct format and work on the tags of your vault
 
-<img src="./assets/simple_description.png" width="75%">
-<img src="./assets/long_description.png" width="75%">
+<img src="./assets/property_tags_description.png" width="50%">
+<img src="./assets/simple_description.png" width="50%"> 
+<img src="./assets/long_description.png" width="50%">
 
 ### 2. Managing Large Libraries
 
@@ -29,7 +34,7 @@ Adding a tag without an `#` will convert it into the correct format and work on 
   - Search & Filter: Use the search bar in the settings to find specific tags or keyword definitions.
   - Clean & Prune: Use the Pencil Icon to refine definitions or the Trash Icon to remove them.
 
-<img src="./assets/tag_description_settings.png" width="75%">
+<img src="./assets/tag_description_settings.png" width="50%">
 
 ### 3. Portability
 
