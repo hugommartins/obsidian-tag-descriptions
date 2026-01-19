@@ -20,13 +20,16 @@ You don't need to plan your tags in advance. Use them as you write and define th
 You can also manually enter tag descriptions on the plug-in settings.
 Adding a tag without an `#` will convert it into the correct format and work on the tags of your vault
 
+<img src="./assets/simple_description.png" width="75%">
+<img src="./assets/long_description.png" width="75%">
+
 ### 2. Managing Large Libraries
 
 - As your vault grows, use the Settings Tab as your Master Glossary:
   - Search & Filter: Use the search bar in the settings to find specific tags or keyword definitions.
   - Clean & Prune: Use the Pencil Icon to refine definitions or the Trash Icon to remove them.
 
-![Tag Tooltip Settings](./assets/tag_description_settings.png)
+<img src="./assets/tag_description_settings.png" width="75%">
 
 ### 3. Portability
 
