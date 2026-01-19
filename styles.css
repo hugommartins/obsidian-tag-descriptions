@@ -42,11 +42,10 @@
     background-color: var(--background-primary);
 }
 
-/* Individual Tag Rows */
 .tag-library-item {
     height: auto !important;
     min-height: var(--input-height);
-    align-items: flex-start;    /* Aligns tag name and buttons to the top */
+    align-items: flex-start;
     padding-top: var(--size-4-4);
     padding-bottom: var(--size-4-4);
 }
@@ -54,12 +53,11 @@
 .tag-library-item {
     height: auto !important;
     min-height: var(--input-height);
-    align-items: flex-start;    /* Aligns tag name and buttons to the top */
+    align-items: flex-start;
     padding-top: var(--size-4-4);
     padding-bottom: var(--size-4-4);
 }
 
-/* Ensure only buttons inside the row feel interactive */
 .tag-library-item .clickable-icon:hover {
     background-color: var(--background-modifier-hover);
 }
@@ -74,22 +72,13 @@
 .tag-char-counter {
     font-size: var(--font-ui-smaller);
     color: var(--text-muted);
-    
-    /* FIX: Set a width large enough for '100/100' */
     width: 50px; 
-    
-    /* Keeps the text aligned to the right within that 50px */
     text-align: right; 
-    
-    /* Helps prevent slight shifts in letter widths */
     font-family: var(--font-monospace); 
-    
-    /* Ensure it doesn't shrink if the flexbox gets tight */
     flex-shrink: 0; 
     user-select: none;
 }
 
-/* Ensure the wrapper has enough gap for the counter */
 .tag-tooltip-input-wrapper {
     display: flex;
     gap: 10px;
@@ -98,11 +87,11 @@
 }
 
 .tag-library-item .setting-item-description {
-    white-space: normal;           /* Allows text to wrap to new lines */
-    word-break: break-all;         /* Prevents long strings from breaking layout */
+    white-space: normal;
+    word-break: break-all;
     line-height: var(--line-height-normal);
-    color: var(--text-muted);      /* Keeps the muted look */
-    max-width: 100%;               /* Ensures it uses the full width */
+    color: var(--text-muted);
+    max-width: 100%;
 }
 
 /* ==========================================================================
@@ -141,17 +130,14 @@
    MODALS
    ========================================================================== */
 
-/* Align the title to the right */
 .tag-delete-modal .modal-title {
     text-align: right;
 }
 
-/* Align the paragraph text to the right */
 .tag-delete-modal p {
     text-align: right;
 }
 
-/* Ensure buttons are at the right (this is your current default) */
 .tag-delete-modal .modal-button-container {
     display: flex;
     justify-content: flex-end; 
