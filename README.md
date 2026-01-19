@@ -26,7 +26,7 @@ Adding a tag without an `#` will convert it into the correct format and work on 
   - Search & Filter: Use the search bar in the settings to find specific tags or keyword definitions.
   - Clean & Prune: Use the Pencil Icon to refine definitions or the Trash Icon to remove them.
 
-![Tag Tooltip Settings](.obsidian/plugins/obsidian-tag-descriptions/assets)
+![Tag Tooltip Settings](./assets/tag_description_settings.png)
 
 ### 3. Portability
 
