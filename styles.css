@@ -1,0 +1,199 @@
+/* ==========================================================================
+   TOOLTIP STYLING
+   ========================================================================== */
+
+.tag-tooltip-container {
+    position: fixed;
+    z-index: var(--layer-menu);
+    pointer-events: none;
+    padding: var(--size-2-2) var(--size-4-3);
+    border-radius: var(--radius-m);
+    font-size: var(--font-ui-small);
+    font-family: var(--font-interface);
+    background-color: var(--background-secondary-alt); 
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border-focus);
+    box-shadow: var(--shadow-l);
+    line-height: var(--line-height-normal);
+    max-width: 250px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: none;
+}
+
+/* ==========================================================================
+   LIBRARY MANAGER (NATIVE STRUCTURE)
+   ========================================================================== */
+
+.setting-item-heading {
+    border-top: none !important;
+    padding-top: var(--size-4-4) !important;
+    padding-bottom: var(--size-4-4) !important;
+}
+
+.setting-item-control .setting-item {
+    border: none !important;
+    padding: 0 !important;
+    background: none !important;
+}
+
+.setting-item-control .search-input {
+    width: 200px;
+    background-color: var(--background-primary);
+}
+
+/* Individual Tag Rows */
+.tag-library-item {
+    height: auto !important;
+    min-height: var(--input-height);
+    align-items: flex-start;    /* Aligns tag name and buttons to the top */
+    padding-top: var(--size-4-4);
+    padding-bottom: var(--size-4-4);
+}
+
+.tag-library-item {
+    height: auto !important;
+    min-height: var(--input-height);
+    align-items: flex-start;    /* Aligns tag name and buttons to the top */
+    padding-top: var(--size-4-4);
+    padding-bottom: var(--size-4-4);
+}
+
+/* Ensure only buttons inside the row feel interactive */
+.tag-library-item .clickable-icon:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.tag-tooltip-empty {
+    padding: var(--size-4-8);
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.tag-char-counter {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-muted);
+    
+    /* FIX: Set a width large enough for '100/100' */
+    width: 50px; 
+    
+    /* Keeps the text aligned to the right within that 50px */
+    text-align: right; 
+    
+    /* Helps prevent slight shifts in letter widths */
+    font-family: var(--font-monospace); 
+    
+    /* Ensure it doesn't shrink if the flexbox gets tight */
+    flex-shrink: 0; 
+    user-select: none;
+}
+
+/* Ensure the wrapper has enough gap for the counter */
+.tag-tooltip-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.tag-library-item .setting-item-description {
+    white-space: normal;           /* Allows text to wrap to new lines */
+    word-break: break-all;         /* Prevents long strings from breaking layout */
+    line-height: var(--line-height-normal);
+    color: var(--text-muted);      /* Keeps the muted look */
+    max-width: 100%;               /* Ensures it uses the full width */
+}
+
+/* ==========================================================================
+   EDIT MODE
+   ========================================================================== */
+
+.tag-tooltip-input-wrapper {
+    display: flex;
+    gap: var(--size-4-2);
+    align-items: center;
+    width: 100%;
+}
+
+.tag-edit-textarea{    
+    width: 100%;
+    resize: none;
+    white-space: pre-wrap;
+    overflow: hidden;
+    min-height: var(--input-height);
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    font-family: var(--font-interface);
+}
+
+.tag-edit-input {
+    width: 100px;
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    min-height: var(--input-height);
+    border-radius: var(--radius-s);
+    font-family: var(--font-interface);
+}
+
+/* ==========================================================================
+   MODALS
+   ========================================================================== */
+
+/* Align the title to the right */
+.tag-delete-modal .modal-title {
+    text-align: right;
+}
+
+/* Align the paragraph text to the right */
+.tag-delete-modal p {
+    text-align: right;
+}
+
+/* Ensure buttons are at the right (this is your current default) */
+.tag-delete-modal .modal-button-container {
+    display: flex;
+    justify-content: flex-end; 
+    margin-top: var(--size-4-6);
+}
+
+.mod-warning {
+    background-color: var(--background-modifier-error) !important;
+    color: white !important;
+}
+
+.tag-tooltip-modal .modal-title {
+    margin-bottom: 25px; 
+}
+
+.tag-tooltip-modal .setting-item-info {
+    display: none;
+}
+
+.tag-tooltip-modal .setting-item-control {
+    width: 100%;
+    justify-content: stretch;
+    padding-top: var(--size-4-4);
+}
+
+.tag-tooltip-modal .setting-item-control input {
+    width: 100%;
+}
+
+.tag-tooltip-modal .modal-button-container {
+    margin-top: 5px;
+}
+
+.tag-modal-counter {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-muted);
+    font-family: var(--font-monospace);
+    text-align: left;
+    margin-left: 2px;
+    padding-bottom: 8px;
+}
+
+.tag-tooltip-modal .modal-button-container {
+    margin-top: 0px; 
+}

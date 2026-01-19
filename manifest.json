@@ -1,0 +1,9 @@
+{
+  "id": "obsidian-tag-tooltips",
+  "name": "Tag Tooltips",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Adds hover tooltips to tags (including emoji tags)",
+  "author": "Hugo Martins",
+  "isDesktopOnly": false
+}
