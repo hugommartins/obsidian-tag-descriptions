@@ -1,6 +1,6 @@
 {
   "name": "obsidian-tag-descriptions",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "description": "A Knowledge Management utility for Obsidian that allows the assignment of custom definitions to tags",
   "main": "main.js",
   "scripts": {
