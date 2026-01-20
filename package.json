@@ -1,7 +1,7 @@
 {
   "name": "obsidian-tag-descriptions",
   "version": "1.0.0",
-  "description": "A Knowledge Management utility that allows you to assign custom definitions to your tags.",
+  "description": "A Knowledge Management utility for Obsidian that allows the assignment of custom definitions to tags",
   "main": "main.js",
   "scripts": {
     "build": "esbuild src/main.ts --bundle --external:obsidian --outfile=main.js --format=cjs --minify",
