@@ -21,8 +21,12 @@
     display: none;
 }
 
+.tag-tooltip-container.is-active {
+    display: block;
+}
+
 /* ==========================================================================
-   LIBRARY MANAGER (NATIVE STRUCTURE)
+   LIBRARY MANAGER & GLOBAL SETTINGS
    ========================================================================== */
 
 .setting-item-heading {
@@ -31,59 +35,15 @@
     padding-bottom: var(--size-4-4) !important;
 }
 
-.setting-item-control .setting-item {
-    border: none !important;
-    padding: 0 !important;
-    background: none !important;
-}
-
-.setting-item-control .search-input {
-    width: 200px;
-    background-color: var(--background-primary);
-}
-
 .tag-library-item {
     height: auto !important;
     min-height: var(--input-height);
     align-items: flex-start;
-    padding-top: var(--size-4-4);
-    padding-bottom: var(--size-4-4);
-}
-
-.tag-library-item {
-    height: auto !important;
-    min-height: var(--input-height);
-    align-items: flex-start;
-    padding-top: var(--size-4-4);
-    padding-bottom: var(--size-4-4);
+    padding: var(--size-4-4) 0;
 }
 
 .tag-library-item .clickable-icon:hover {
     background-color: var(--background-modifier-hover);
-}
-
-.tag-tooltip-empty {
-    padding: var(--size-4-8);
-    text-align: center;
-    color: var(--text-muted);
-    font-style: italic;
-}
-
-.tag-char-counter {
-    font-size: var(--font-ui-smaller);
-    color: var(--text-muted);
-    width: 50px; 
-    text-align: right; 
-    font-family: var(--font-monospace); 
-    flex-shrink: 0; 
-    user-select: none;
-}
-
-.tag-tooltip-input-wrapper {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    width: 100%;
 }
 
 .tag-library-item .setting-item-description {
@@ -94,8 +54,37 @@
     max-width: 100%;
 }
 
+.tag-char-counter,
+.tag-modal-counter {
+    color: var(--text-muted);
+    font-family: var(--font-monospace);
+    user-select: none;
+}
+
+.tag-char-counter {
+    font-size: 0.8em;
+    min-width: 45px;
+    text-align: right; 
+    flex-shrink: 0; 
+}
+
+.tag-modal-counter {
+    font-size: var(--font-ui-smaller);
+    text-align: left;
+    margin-left: 2px;
+}
+
+.setting-item-control .search-input,
+.setting-item-control .search-input-container {
+    width: 200px;
+}
+
+.setting-item-control .search-input {
+    background-color: var(--background-primary);
+}
+
 /* ==========================================================================
-   EDIT MODE
+   INPUTS & "ADD NEW" FORM
    ========================================================================== */
 
 .tag-tooltip-input-wrapper {
@@ -105,43 +94,95 @@
     width: 100%;
 }
 
-.tag-edit-textarea{    
+.tag-tooltip-input-wrapper .setting-item-control {
+    flex-grow: 1;
+    justify-content: flex-end;
+}
+
+.setting-item-control .setting-item {
+    border: none !important;
+    padding: 0 !important;
+    background: none !important;
+}
+
+.tag-tooltip-add-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tag-tooltip-add-row .setting-item-info {
+    flex: 1 1 auto;
+    margin: 0;
+}
+
+.tag-tooltip-add-row .setting-item-control {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    padding: 0;
+}
+
+.tag-tooltip-add-row input[type="text"]:first-of-type,
+.tag-edit-input {
+    width: 120px;
+}
+
+.tag-tooltip-add-row .setting-item-control input[type="text"]:nth-of-type(2) {
+    width: 200px;
+}
+
+.tag-edit-textarea,
+.tag-edit-input {    
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    font-family: var(--font-interface);
+    min-height: var(--input-height);
+}
+
+.tag-edit-textarea {    
     width: 100%;
     resize: none;
     white-space: pre-wrap;
     overflow: hidden;
-    min-height: var(--input-height);
-    background-color: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: var(--radius-s);
-    font-family: var(--font-interface);
 }
 
-.tag-edit-input {
-    width: 100px;
-    background-color: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    min-height: var(--input-height);
-    border-radius: var(--radius-s);
-    font-family: var(--font-interface);
+.tag-tooltip-empty {
+    padding: var(--size-4-8);
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 /* ==========================================================================
    MODALS
-   ========================================================================== */
+   ========================================================================= */
 
-.tag-delete-modal .modal-title {
-    text-align: right;
+.tag-tooltip-modal {
+    display: flex;
+    flex-direction: column;
 }
 
+.tag-delete-modal .modal-title,
 .tag-delete-modal p {
-    text-align: right;
+    text-align: left;
+}
+
+.tag-delete-modal .modal-button-container,
+.tag-tooltip-modal .modal-button-container {
+    display: flex;
+    justify-content: flex-end; 
 }
 
 .tag-delete-modal .modal-button-container {
-    display: flex;
-    justify-content: flex-end; 
     margin-top: var(--size-4-6);
+}
+
+.tag-tooltip-modal .modal-button-container {
+    margin-top: var(--size-4-4);
 }
 
 .mod-warning {
@@ -157,29 +198,18 @@
     display: none;
 }
 
-.tag-tooltip-modal .setting-item-control {
-    width: 100%;
-    justify-content: stretch;
-    padding-top: var(--size-4-4);
+.tag-tooltip-modal .setting-item {
+    padding: 0;
+    border: none;
 }
 
+.tag-tooltip-modal .setting-item,
+.tag-tooltip-modal .setting-item-control,
 .tag-tooltip-modal .setting-item-control input {
     width: 100%;
 }
 
-.tag-tooltip-modal .modal-button-container {
-    margin-top: 5px;
-}
-
-.tag-modal-counter {
-    font-size: var(--font-ui-smaller);
-    color: var(--text-muted);
-    font-family: var(--font-monospace);
-    text-align: left;
-    margin-left: 2px;
-    padding-bottom: 8px;
-}
-
-.tag-tooltip-modal .modal-button-container {
-    margin-top: 0px; 
+.tag-tooltip-modal .setting-item-control {
+    justify-content: stretch;
+    padding-top: var(--size-4-4);
 }

@@ -1,7 +1,7 @@
 {
   "id": "tag-descriptions",
   "name": "Tag Descriptions",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "minAppVersion": "1.5.0",
   "description": "Adds descriptions presented as tooltips to tags (including emoji tags)",
   "author": "Hugo Martins",

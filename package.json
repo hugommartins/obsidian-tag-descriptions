@@ -1,0 +1,33 @@
+{
+  "name": "obsidian-tag-descriptions",
+  "version": "1.0.0",
+  "description": "A Knowledge Management utility that allows you to assign custom definitions to your tags.",
+  "main": "main.js",
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --external:obsidian --outfile=main.js --format=cjs --minify",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^25.0.9",
+    "esbuild": "0.20.1",
+    "eslint-plugin-obsidianmd": "^0.1.9",
+    "jiti": "^2.6.1",
+    "obsidian": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "^8.53.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hugommartins/obsidian-tag-descriptions.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hugommartins/obsidian-tag-descriptions/issues"
+  },
+  "homepage": "https://github.com/hugommartins/obsidian-tag-descriptions#readme"
+}

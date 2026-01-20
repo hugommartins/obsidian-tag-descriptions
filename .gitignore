@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+main.js
+dist/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Obsidian specific
+data.json
