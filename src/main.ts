@@ -118,7 +118,7 @@ export default class TagTooltipsPlugin extends Plugin {
                 .setTitle(`Set description for ${tag}`)
                 .setIcon('tag')
                 .setSection('action-section')
-                .onClick(async () => {
+                .onClick(() => {
                     new QuickAddModal(
                         this.app,
                         tag,
