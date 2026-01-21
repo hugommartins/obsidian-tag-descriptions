@@ -3,7 +3,7 @@
   "name": "Tag Descriptions",
   "version": "1.0.0",
   "minAppVersion": "1.5.0",
-  "description": "A Knowledge Management utility for Obsidian that allows the assignment of custom definitions to tags",
+  "description": "A knowledge management utility that allows the assignment of custom definitions to tags.",
   "author": "Hugo Martins",
   "isDesktopOnly": true
 }
