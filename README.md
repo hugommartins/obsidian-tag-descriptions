@@ -1,70 +1,120 @@
-# Tag Tooltips for Obsidian
+# Tag Descriptions
 
-A Knowledge Management utility that allows you to assign custom definitions to your tags.
+An [Obsidian](https://obsidian.md) plugin that lets you assign custom definitions to your tags and see them as tooltips wherever the tag appears.
 
-## 🚀 Features
+<div align="center">
 
-- Instant Hover Tooltips: Hover over any tag in Reading or Live Preview mode to see its assigned description.
-- Context Menu Integration: Right-click a tag in the editor to quickly set or update its description without leaving your note.
-- Input Safeguards:
-  - Live Character Count
-  - Duplicate Protection: Notifications prevent you from accidentally overwriting existing tags.
-  - Backup & Restore: Full JSON export/import to sync your definitions across different vaults.
+![License](https://img.shields.io/github/license/hugommartins/obsidian-tag-descriptions?style=flat-square)
+![Release](https://img.shields.io/github/v/release/hugommartins/obsidian-tag-descriptions?style=flat-square)
 
-## 📘 User Guide
+[Features](#features) · 
+[Installation](#installation)
+<br>
+[Usage](#usage) · [Backup and Restore](#backup-and-restore)
+<br>
+[Limitations](#limitations) · [Roadmap](#roadmap)
 
-### 1. Building Your Glossary
+</div>
 
-You don't need to plan your tags in advance. Use them as you write and define them on the fly. Use the right-click on a new tag and select "Set description". Type your meaning. Save it. The tooltip is now active everywhere.
+## Features
 
-For frontmatter tags:
-- Adding descriptions with right-click is not supported on frontmatter tags
-- The tooltips are only visible with the properties view and not in source mode
+- **Hover tooltips:** hover over any tag in Reading view or Live Preview to see its description.
+- **Context menu:** right-click a tag in the editor to set or update its description without leaving the note.
+- **Settings library:** a searchable list of every description, with inline edit and delete.
+- **Input safeguards:** live character counter, duplicate protection when adding tags, and an optional confirmation before deleting.
+- **Backup and restore:** export descriptions to JSON and import them into another vault.
 
-You can also manually enter tag descriptions on the plug-in settings.
-Adding a tag without an `#` will convert it into the correct format and work on the tags of your vault
+## Installation
 
-<img src="./assets/property_tags_description.png" width="75%">
-<img src="./assets/simple_description.png" width="75%"> 
-<img src="./assets/long_description.png" width="75%">
+Requires Obsidian 1.5.0 or later. The plugin is desktop only.
 
-### 2. Managing Large Libraries
+### Community plugins
 
-- As your vault grows, use the Settings Tab as your Master Glossary:
-  - Search & Filter: Use the search bar in the settings to find specific tags or keyword definitions.
-  - Clean & Prune: Use the Pencil Icon to refine definitions or the Trash Icon to remove them.
+The plugin has been submitted to the Obsidian community plugin directory and is pending review. Once approved, install it from **Settings > Community plugins > Browse** by searching for "Tag Descriptions".
 
-<img src="./assets/tag_description_settings.png" width="75%">
+### BRAT
 
-### 3. Portability
+1. Install the [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin and enable it.
+2. Run the command **BRAT: Add a beta plugin for testing**.
+3. Enter `hugommartins/obsidian-tag-descriptions` and confirm.
+4. Enable **Tag Descriptions** under **Settings > Community plugins**.
 
-If you use multiple vaults:
-- Click Export in your primary vault settings.
-- Save the tag-tooltips-backup.json file.
-- Click Import in your secondary vault to bring all your definitions with you.
+### Manual
 
-The backup files are stored in `.json` format. Example:
+1. Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/hugommartins/obsidian-tag-descriptions/releases/latest).
+2. Copy them to `<your-vault>/.obsidian/plugins/tag-descriptions/`.
+3. Reload Obsidian and enable **Tag Descriptions** under **Settings > Community plugins**.
+
+## Usage
+
+### Add a description
+
+You do not need to plan your tags in advance. Use them while you write and define them as you go:
+
+1. Right-click a tag in the editor and select **Set description**.
+2. Type the meaning and save.
+3. The tooltip is now active for that tag everywhere in the vault.
+
+You can also add descriptions manually in the plugin settings. A tag entered without a leading `#` is converted to the correct format automatically.
+
+![Tag description on a property tag](./assets/property_tags_description.png)
+
+![Short description tooltip](./assets/simple_description.png)
+
+![Long description tooltip](./assets/long_description.png)
+
+### Manage your library
+
+Use the plugin settings as a master glossary as the vault grows:
+
+- **Search and filter:** find tags by name or by words in their definition.
+- **Edit:** use the pencil icon to refine a tag or its description.
+- **Delete:** use the trash icon to remove a description. Disable **Confirm before deleting** to skip the confirmation prompt.
+
+![Plugin settings library](./assets/tag_description_settings.png)
+
+### Frontmatter tags
+
+- Tooltips for frontmatter tags appear in the Properties view, not in source mode.
+- Setting a description through the right-click menu is not supported on frontmatter tags. Use the plugin settings instead.
+
+## Backup and Restore
+
+To move descriptions between vaults:
+
+1. In the source vault, open the plugin settings and click **Export**.
+2. Save the `tag-tooltips-backup.json` file.
+3. In the target vault, open the plugin settings and click **Import** and select the file.
+
+The backup is a flat JSON object that maps each tag to its description:
 
 ```json
 {
-  "tagMap": {
-    "#testtag": "description",
-    "#longdescription": "Man's wishes fox washing hungry Ecthelion. That is no trinket you carry. Innocent welcome angry late"
-  },
-  "confirmDelete": true
+  "#testtag": "description",
+  "#longdescription": "A longer description for the tag."
 }
 ```
 
-## 🛣️ Roadmap
+On import, entries that are not valid tag-to-text pairs are skipped and reported. Descriptions for tags that already exist in the target vault are overwritten.
 
-### Features 
-- [ ] Nested Tag Inheritance
+## Limitations
+
+- Descriptions are plain text and limited to 100 characters.
+- Tag matching is case-sensitive: `#Project` and `#project` are treated as different tags.
+- Hover is the only way to show a tooltip, so touch devices are not supported.
+
+## Roadmap
+
+### Features
+
+- [ ] Nested tag inheritance
 - [ ] Discover missing descriptions
-- [ ] Holding a Modifier Key to Show
-- [ ] Smart Tag Formatting
-- [ ] Progress Bar/Visual "Breadrumbs"
-- [ ] Mobile Support 
+- [ ] Hold a modifier key to show tooltips
+- [ ] Smart tag formatting
+- [ ] Progress bar or visual breadcrumbs
+- [ ] Mobile support
 
-### UI/UX
+### UI and UX
+
 - [ ] Hover delay
-- [ ] Styling Options
+- [ ] Styling options

@@ -1,8 +1,9 @@
 {
+  "confirmDelete": true,
   "tagMap": {
     "#tag": "tag",
     "#✅": "DESCRIPTIN",
-    "#fosdkfjsidfjsiofj": "descriot"
-  },
-  "confirmDelete": true
+    "#fosdkfjsidfjsiofj": "descriot",
+    "#reallylongtagthatnoonewouldmake": "description"
+  }
 }

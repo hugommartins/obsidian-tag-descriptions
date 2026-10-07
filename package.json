@@ -11,10 +11,10 @@
     "@eslint/js": "^9.39.2",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^25.0.9",
-    "esbuild": "0.20.1",
-    "eslint-plugin-obsidianmd": "^0.1.9",
+    "esbuild": "^0.28.2",
+    "eslint-plugin-obsidianmd": "^0.1.8",
     "jiti": "^2.6.1",
-    "obsidian": "latest",
+    "obsidian": "^0.14.5",
     "typescript": "latest",
     "typescript-eslint": "^8.53.1"
   },

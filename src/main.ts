@@ -1,24 +1,35 @@
-import { Menu, Plugin, debounce, Editor, Notice } from 'obsidian';
+import { Menu, Plugin, Editor, Notice } from 'obsidian';
 import { TagTooltipSettings, DEFAULT_SETTINGS } from './settings'
-import { TAG_SELECTORS } from './constants'
+import { TAG_SELECTORS, TAGS_PROPERTY_SELECTOR, PILL_SELECTOR } from './constants'
 import { TagTooltipSettingTab } from './ui/settingsTab';
-import { formatTag, getTagAtCursor } from './utils/tagUtils';
+import { formatTag, getTagAtCursor, sanitizeTagMap } from './utils/tagUtils';
 import { QuickAddModal } from './ui/modals';
 
 export default class TagTooltipsPlugin extends Plugin {
-    settings!: TagTooltipSettings;
+    settings: TagTooltipSettings = {
+        tagMap: {},
+        confirmDelete: DEFAULT_SETTINGS.confirmDelete,
+    };
     tooltipEl!: HTMLDivElement;
 
-    async onload() {
+    private showTimer: number | null = null;
+    private readonly showDelayMs = 50;
+
+    onload(): void {
+        void this.initialize();
+    }
+
+    onunload(): void {
+        this.cancelPendingShow();
+        this.tooltipEl?.remove();
+    }
+
+    private async initialize(): Promise<void> {
         await this.loadSettings();
         this.createTooltip();
         this.registerHoverEvents();
         this.registerContextMenu();
         this.addSettingTab(new TagTooltipSettingTab(this.app, this));
-    }
-
-    onunload() {
-        this.tooltipEl?.remove();
     }
 
     createTooltip() {
@@ -52,18 +63,38 @@ export default class TagTooltipsPlugin extends Plugin {
     }
 
     hideTooltip() {
-        this.tooltipEl.removeClass('is-active');
+        // A pending show must not fire after the pointer has left the tag.
+        this.cancelPendingShow();
+        this.tooltipEl?.removeClass('is-active');
+    }
+
+    private scheduleShow(target: HTMLElement, desc: string) {
+        this.cancelPendingShow();
+        this.showTimer = window.setTimeout(() => {
+            this.showTimer = null;
+            this.showTooltip(target, desc);
+        }, this.showDelayMs);
+    }
+
+    private cancelPendingShow() {
+        if (this.showTimer !== null) {
+            window.clearTimeout(this.showTimer);
+            this.showTimer = null;
+        }
+    }
+
+    /** Closest tag element, ignoring pills that are not in the `tags` property. */
+    private findTagEl(target: Element | null): HTMLElement | null {
+        const el = target?.closest<HTMLElement>(TAG_SELECTORS) ?? null;
+        if (!el) return null;
+        if (el.matches(PILL_SELECTOR) && !el.closest(TAGS_PROPERTY_SELECTOR)) return null;
+        return el;
     }
 
     registerHoverEvents() {
-        const debouncedShow = debounce((target: HTMLElement, desc: string) => {
-            this.showTooltip(target, desc);
-        }, 50, true);
+        this.registerDomEvent(activeDocument, 'mouseover', (evt: MouseEvent) => {
+            const tagEl = this.findTagEl(evt.target as Element | null);
 
-        this.registerDomEvent(window.activeDocument, 'mouseover', (evt: MouseEvent) => {
-            const target = evt.target as HTMLElement;
-            const tagEl = target.closest(TAG_SELECTORS) as HTMLElement;
-            
             if (!tagEl) {
                 this.hideTooltip();
                 return;
@@ -73,19 +104,20 @@ export default class TagTooltipsPlugin extends Plugin {
             const desc = this.settings.tagMap[tag];
 
             if (desc) {
-                debouncedShow(tagEl, desc);
+                this.scheduleShow(tagEl, desc);
+            } else {
+                this.hideTooltip();
             }
         });
 
-        this.registerDomEvent(window.activeDocument, 'mouseout', (evt: MouseEvent) => {
-            const related = evt.relatedTarget as Element;
-            if (!related || !related.closest(TAG_SELECTORS)) {
+        this.registerDomEvent(activeDocument, 'mouseout', (evt: MouseEvent) => {
+            if (!this.findTagEl(evt.relatedTarget as Element | null)) {
                 this.hideTooltip();
             }
         });
     }
 
-    formatTag(text: string): string { 
+    formatTag(text: string): string {
         return formatTag(text);
     }
 
@@ -113,11 +145,9 @@ export default class TagTooltipsPlugin extends Plugin {
     }
 
     addTagMenuItem(menu: Menu, tag: string) {
-        menu.addItem((item) =>
-            item
-                .setTitle(`Set description for ${tag}`)
+        menu.addItem((item) => {
+            item.setTitle(`Set description for ${tag}`)
                 .setIcon('tag')
-                .setSection('action-section')
                 .onClick(() => {
                     new QuickAddModal(
                         this.app,
@@ -129,13 +159,23 @@ export default class TagTooltipsPlugin extends Plugin {
                             new Notice(`Tooltip for ${tag} saved!`);
                         }
                     ).open();
-                })
-        );
+                });
+
+            // setSection is not present in every version of Obsidian's public typings.
+            (item as unknown as { setSection?: (section: string) => void })
+                .setSection?.('action-section');
+        });
     }
 
     async loadSettings() {
-        const loadedData = (await this.loadData()) as TagTooltipSettings | null;
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+        const loadedData = (await this.loadData()) as Partial<TagTooltipSettings> | null;
+        this.settings = {
+            confirmDelete: typeof loadedData?.confirmDelete === 'boolean'
+                ? loadedData.confirmDelete
+                : DEFAULT_SETTINGS.confirmDelete,
+            // Drops entries corrupted by earlier imports (e.g. non-string values).
+            tagMap: sanitizeTagMap(loadedData?.tagMap ?? {}).map,
+        };
     }
 
     async saveSettings() {

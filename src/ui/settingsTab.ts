@@ -1,6 +1,7 @@
 import { PluginSettingTab, Setting, App, Notice, debounce } from "obsidian";
 import { MAX_DESC_LENGTH } from "src/constants";
 import { DeleteConfirmModal } from "src/ui/modals";
+import { sanitizeTagMap } from "src/utils/tagUtils";
 import type TagTooltipsPlugin from '../main';
 
 export class TagTooltipSettingTab extends PluginSettingTab {
@@ -123,7 +124,8 @@ export class TagTooltipSettingTab extends PluginSettingTab {
 
     renderList(container: HTMLElement) {
         container.empty();
-        const entries = Object.entries(this.plugin.settings.tagMap).filter(
+        const tagMap: Record<string, string> = this.plugin.settings.tagMap;
+        const entries = (Object.entries(tagMap) as [string, string][]).filter(
             ([tag, desc]) =>
                 tag.toLowerCase().includes(this.searchQuery) ||
                 desc.toLowerCase().includes(this.searchQuery)
@@ -174,6 +176,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         const save = async () => {
             const newTag = this.plugin.formatTag(tagInput.value.trim());
             const newDesc = descInput.value.trim();
+            if (newTag.length < 2) { new Notice('Invalid tag'); return; }
             if (!newDesc) { new Notice('Description cannot be empty!'); return; }
             if (newTag !== tag && this.plugin.settings.tagMap[newTag]) { new Notice(`Tag already exists.`); return; }
 
@@ -237,16 +240,27 @@ export class TagTooltipSettingTab extends PluginSettingTab {
             const target = e.target as HTMLInputElement;
             const file = target.files?.[0];
             if (!file) return;
+            let data: unknown;
             try {
-                const data = JSON.parse(await file.text()) as Record<string, string>;
-                if (typeof data !== 'object' || Array.isArray(data)) throw new Error();
-                Object.assign(this.plugin.settings.tagMap, data);
-                await this.plugin.saveSettings();
-                this.display();
-                new Notice('Library imported!');
-            } catch { 
-                new Notice('Invalid JSON file.'); 
+                data = JSON.parse(await file.text());
+            } catch {
+                new Notice('Invalid JSON file.');
+                return;
             }
+
+            const { map, skipped } = sanitizeTagMap(data);
+            const imported = Object.keys(map).length;
+            if (!imported) {
+                new Notice('No valid tag descriptions found in file.');
+                return;
+            }
+
+            Object.assign(this.plugin.settings.tagMap, map);
+            await this.plugin.saveSettings();
+            this.display();
+            new Notice(skipped
+                ? `Imported ${imported} tags, skipped ${skipped} invalid entries.`
+                : `Imported ${imported} tags.`);
         };
         input.click();
     }

@@ -7,4 +7,7 @@ export const TAG_SELECTORS = [
     '.multi-select-pill-content'
 ].join(', ');
 
+export const PILL_SELECTOR = '.multi-select-pill-content';
+export const TAGS_PROPERTY_SELECTOR = '[data-property-key="tags"]';
+
 export const MAX_DESC_LENGTH = 100;
