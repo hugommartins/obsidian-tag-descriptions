@@ -17,6 +17,7 @@ export default class TagTooltipsPlugin extends Plugin {
     settings: TagTooltipSettings = {
         ...DEFAULT_SETTINGS,
         tagMap: {},
+        ignoredTags: [],
     };
     tooltipEl!: HTMLDivElement;
 
@@ -252,6 +253,14 @@ export default class TagTooltipsPlugin extends Plugin {
                 : DEFAULT_SETTINGS.hoverDelayMs,
             // Drops entries corrupted by earlier imports (e.g. non-string values).
             tagMap: sanitizeTagMap(data.tagMap ?? {}).map,
+            ignoredTags: Array.isArray(data.ignoredTags)
+                ? [...new Set(
+                    (data.ignoredTags as unknown[])
+                        .filter((t): t is string => typeof t === 'string')
+                        .map((t) => formatTag(t))
+                        .filter((t) => t.length >= 2)
+                )]
+                : [],
         };
     }
 

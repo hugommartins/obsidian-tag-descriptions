@@ -19,7 +19,9 @@ An [Obsidian](https://obsidian.md) plugin that lets you assign custom definition
 ## Features
 
 - **Hover tooltips:** hover over any tag in Reading view or Live Preview to see its description.
+- **Flexible trigger:** show tooltips on hover with an adjustable delay, or only while holding a modifier key.
 - **Context menu:** right-click a tag in the editor to set or update its description without leaving the note.
+- **Missing descriptions:** a list of tags used in your vault that have no description yet, ranked by usage, with the option to ignore tags that do not need one.
 - **Settings library:** a searchable list of every description, with inline edit and delete.
 - **Input safeguards:** live character counter, duplicate protection when adding tags, and an optional confirmation before deleting.
 - **Backup and restore:** export descriptions to JSON and import them into another vault.
@@ -30,7 +32,7 @@ Requires Obsidian 1.5.0 or later. The plugin is desktop only.
 
 ### Community plugins
 
-The plugin has been submitted to the Obsidian community plugin directory and is pending review. Not available at the moment
+The plugin has been submitted to the Obsidian community plugin directory and is pending review. Not available at the moment.
 
 ### BRAT
 
@@ -63,6 +65,12 @@ You can also add descriptions manually in the plugin settings. A tag entered wit
 
 ![Long description tooltip](./assets/long_description.png)
 
+### Find tags without a description
+
+The plugin settings list every tag used in your vault that has no description yet, most used first, with the number of notes that use it. Click **Add description** next to a tag to define it. The list shows the top 50; use **Show all** to see the rest.
+
+Tags that do not need a description can be hidden with the eye icon. Hidden tags are collected under **Ignored tags**, where **Show** lists them and the eye icon restores one. The ignore list is stored in the plugin settings and is not included in the backup export.
+
 ### Manage your library
 
 Use the plugin settings as a master glossary as the vault grows:
@@ -74,9 +82,9 @@ Use the plugin settings as a master glossary as the vault grows:
 ![Plugin settings library](./assets/tag_description_settings.png)
 
 ### Choose when tooltips appear
- 
+
 Under **Show tooltip** in the plugin settings, pick one of two modes:
- 
+
 - **On hover:** the description appears when you point at a tag. Use **Hover delay** (0 to 1000 ms) to wait before it shows.
 - **While holding a modifier key:** the description appears only while you hold the chosen key (**Ctrl or Cmd**, **Alt or Option**, or **Shift**) over a tag. This keeps tooltips out of the way while you read or edit.
 
@@ -106,7 +114,7 @@ On import, entries that are not valid tag-to-text pairs are skipped and reported
 
 ## Limitations
 
-- Descriptions are plain text and limited to 100 characters (per design.)
+- Descriptions are plain text and limited to 100 characters (by design).
 - Tag matching is case-sensitive: `#Project` and `#project` are treated as different tags.
 - Tooltips need a pointer (hover or modifier key), so touch devices are not supported.
 - Tooltips work in the main Obsidian window only, not in pop-out windows.
@@ -116,7 +124,7 @@ On import, entries that are not valid tag-to-text pairs are skipped and reported
 ### Features
 
 - [ ] Nested tag inheritance
-- [ ] Discover missing descriptions - list undefined tags by usage with inline add.
+- [x] Discover missing descriptions - list undefined tags by usage with inline add.
 - [x] Hold a modifier key to show tooltips
 - [ ] Progress bar - have a visual queue of how many tags on your vault are left without description
 - [ ] Mobile support

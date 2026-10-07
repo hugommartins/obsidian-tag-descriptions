@@ -8,13 +8,17 @@ import {
     isOneOf,
 } from "src/settings";
 import { MAX_DESC_LENGTH } from "src/constants";
-import { DeleteConfirmModal } from "src/ui/modals";
-import { sanitizeTagMap } from "src/utils/tagUtils";
+import { DeleteConfirmModal, QuickAddModal } from "src/ui/modals";
+import { sanitizeTagMap, collectVaultTags } from "src/utils/tagUtils";
 import type TagTooltipsPlugin from '../main';
+
+const MISSING_PREVIEW_LIMIT = 50;
 
 export class TagTooltipSettingTab extends PluginSettingTab {
     searchQuery: string = '';
     editingTag: string | null = null;
+    showAllMissing: boolean = false;
+    showIgnored: boolean = false;
 
     constructor(app: App, public plugin: TagTooltipsPlugin) {
         super(app, plugin);
@@ -27,7 +31,100 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         this.renderAddForm(containerEl);
         this.renderBackup(containerEl);
         this.renderPreferences(containerEl);
+        this.renderMissing(containerEl);
         this.renderLibrary(containerEl);
+    }
+
+    renderMissing(container: HTMLElement) {
+        const tagMap: Record<string, string> = this.plugin.settings.tagMap;
+        const ignored = new Set(this.plugin.settings.ignoredTags);
+        const missing = [...collectVaultTags(this.app).entries()]
+            .filter(([tag]) => !tagMap[tag] && !ignored.has(tag))
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+        new Setting(container)
+            .setName(`Tags without a description (${missing.length})`)
+            .setHeading();
+
+        if (!missing.length) {
+            container.createDiv({
+                cls: 'tag-tooltip-empty',
+                text: 'No tags are missing a description.',
+            });
+        } else {
+            const list = container.createDiv({ cls: 'setting-items' });
+            const visible = this.showAllMissing ? missing : missing.slice(0, MISSING_PREVIEW_LIMIT);
+
+            for (const [tag, count] of visible) {
+                new Setting(list)
+                    .setName(tag)
+                    .setDesc(`Used in ${count} ${count === 1 ? 'note' : 'notes'}`)
+                    .addButton((b) =>
+                        b.setButtonText('Add description').onClick(() => {
+                            new QuickAddModal(this.app, tag, '', async (desc) => {
+                                this.plugin.settings.tagMap[tag] = desc;
+                                await this.plugin.saveSettings();
+                                this.display();
+                                new Notice(`Tooltip for ${tag} saved!`);
+                            }).open();
+                        })
+                    )
+                    .addExtraButton((b) =>
+                        b.setIcon('eye-off')
+                            .setTooltip('Ignore this tag')
+                            .onClick(async () => {
+                                this.plugin.settings.ignoredTags.push(tag);
+                                await this.plugin.saveSettings();
+                                this.display();
+                            })
+                    );
+            }
+
+            if (missing.length > MISSING_PREVIEW_LIMIT) {
+                new Setting(list).addButton((b) =>
+                    b.setButtonText(this.showAllMissing ? 'Show fewer' : `Show all ${missing.length}`)
+                        .onClick(() => {
+                            this.showAllMissing = !this.showAllMissing;
+                            this.display();
+                        })
+                );
+            }
+        }
+
+        this.renderIgnored(container);
+    }
+
+    renderIgnored(container: HTMLElement) {
+        const ignoredTags = [...this.plugin.settings.ignoredTags].sort((a, b) => a.localeCompare(b));
+        if (!ignoredTags.length) return;
+
+        new Setting(container)
+            .setName(`Ignored tags (${ignoredTags.length})`)
+            .setDesc('Hidden from the list above. Tags stay ignored even if they are no longer used in the vault.')
+            .addButton((b) =>
+                b.setButtonText(this.showIgnored ? 'Hide' : 'Show').onClick(() => {
+                    this.showIgnored = !this.showIgnored;
+                    this.display();
+                })
+            );
+
+        if (!this.showIgnored) return;
+
+        const list = container.createDiv({ cls: 'setting-items' });
+        for (const tag of ignoredTags) {
+            new Setting(list)
+                .setName(tag)
+                .addExtraButton((b) =>
+                    b.setIcon('eye')
+                        .setTooltip('Stop ignoring')
+                        .onClick(async () => {
+                            this.plugin.settings.ignoredTags =
+                                this.plugin.settings.ignoredTags.filter((t) => t !== tag);
+                            await this.plugin.saveSettings();
+                            this.display();
+                        })
+                );
+        }
     }
 
     renderAddForm(container: HTMLElement) {

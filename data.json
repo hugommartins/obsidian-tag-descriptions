@@ -8,5 +8,22 @@
     "#✅": "DESCRIPTIN",
     "#fosdkfjsidfjsiofj": "descriot",
     "#reallylongtagthatnoonewouldmake": "description"
-  }
+  },
+  "ignoredTags": [
+    "#🪨",
+    "#🗒️",
+    "#🪶",
+    "#⚖️",
+    "#🏛️",
+    "#green",
+    "#newtag",
+    "#source/",
+    "#source/book",
+    "#🛠️",
+    "#📚",
+    "#source/udemy",
+    "#source/article",
+    "#source/istqb",
+    "#⚰️"
+  ]
 }

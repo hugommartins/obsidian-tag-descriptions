@@ -11,6 +11,8 @@ export const HOVER_DELAY_STEP_MS = 50;
 
 export interface TagTooltipSettings {
     tagMap: Record<string, string>;
+    /** Tags hidden from the "missing descriptions" list. */
+    ignoredTags: string[];
     confirmDelete: boolean;
     triggerMode: TriggerMode;
     hoverDelayMs: number;
@@ -19,6 +21,7 @@ export interface TagTooltipSettings {
 
 export const DEFAULT_SETTINGS: TagTooltipSettings = {
     tagMap: {},
+    ignoredTags: [],
     confirmDelete: true,
     triggerMode: 'hover',
     hoverDelayMs: 50,
