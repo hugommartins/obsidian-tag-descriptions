@@ -25,7 +25,3 @@ jobs:
 
       - name: Build plugin
         run: npm run build
-
-      # Optional: Linting (if you have eslint set up)
-      # - name: Lint
-      #   run: npx eslint src/
