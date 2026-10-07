@@ -23,6 +23,36 @@ export function getTagAtCursor(editor: Editor): string | null {
     return token && token.type === 'tag' ? token.text : null;
 }
 
+export interface ResolvedDescription {
+    description: string;
+    /** The tag the description belongs to: the tag itself, or the parent it was inherited from. */
+    source: string;
+}
+
+/**
+ * Finds the description for a tag. With `inherit`, a nested tag such as `#a/b/c`
+ * falls back to the closest ancestor that has one (`#a/b`, then `#a`).
+ */
+export function resolveDescription(
+    tagMap: Record<string, string>,
+    tag: string,
+    inherit: boolean
+): ResolvedDescription | null {
+    const own = tagMap[tag];
+    if (own) return { description: own, source: tag };
+    if (!inherit) return null;
+
+    let cursor = tag;
+    for (;;) {
+        const slash = cursor.lastIndexOf('/');
+        if (slash <= 1) return null;
+
+        cursor = cursor.slice(0, slash);
+        const parent = tagMap[cursor];
+        if (parent) return { description: parent, source: cursor };
+    }
+}
+
 /** Maps every tag used in the vault (inline and frontmatter) to the number of notes using it. */
 export function collectVaultTags(app: App): Map<string, number> {
     const counts = new Map<string, number>();

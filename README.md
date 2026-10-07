@@ -19,6 +19,7 @@ An [Obsidian](https://obsidian.md) plugin that lets you assign custom definition
 ## Features
 
 - **Hover tooltips:** hover over any tag in Reading view or Live Preview to see its description.
+- **Nested tag inheritance:** nested tags such as `#project/alpha` fall back to the description of their closest parent.
 - **Flexible trigger:** show tooltips on hover with an adjustable delay, or only while holding a modifier key.
 - **Context menu:** right-click a tag in the editor to set or update its description without leaving the note.
 - **Missing descriptions:** a list of tags used in your vault that have no description yet, ranked by usage, with the option to ignore tags that do not need one.
@@ -70,6 +71,10 @@ You can also add descriptions manually in the plugin settings. A tag entered wit
 The plugin settings list every tag used in your vault that has no description yet, most used first, with the number of notes that use it. Click **Add description** next to a tag to define it. The list shows the top 50; use **Show all** to see the rest.
 
 Tags that do not need a description can be hidden with the eye icon. Hidden tags are collected under **Ignored tags**, where **Show** lists them and the eye icon restores one. The ignore list is stored in the plugin settings and is not included in the backup export.
+
+### Nested tags
+
+With **Inherit parent descriptions** enabled (the default), a nested tag without its own description shows the description of its closest parent. For example, if `#project` is described and `#project/alpha` is not, hovering `#project/alpha` shows the `#project` description followed by "(inherited from #project)". A tag with its own description always shows that one. Tags covered by an inherited description are left out of the missing descriptions list.
 
 ### Manage your library
 
@@ -123,7 +128,7 @@ On import, entries that are not valid tag-to-text pairs are skipped and reported
 
 ### Features
 
-- [ ] Nested tag inheritance
+- [x] Nested tag inheritance
 - [x] Discover missing descriptions - list undefined tags by usage with inline add.
 - [x] Hold a modifier key to show tooltips
 - [ ] Progress bar - have a visual queue of how many tags on your vault are left without description

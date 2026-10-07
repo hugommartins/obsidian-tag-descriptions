@@ -9,7 +9,7 @@ import {
 } from "src/settings";
 import { MAX_DESC_LENGTH } from "src/constants";
 import { DeleteConfirmModal, QuickAddModal } from "src/ui/modals";
-import { sanitizeTagMap, collectVaultTags } from "src/utils/tagUtils";
+import { sanitizeTagMap, collectVaultTags, resolveDescription } from "src/utils/tagUtils";
 import type TagTooltipsPlugin from '../main';
 
 const MISSING_PREVIEW_LIMIT = 50;
@@ -39,7 +39,10 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         const tagMap: Record<string, string> = this.plugin.settings.tagMap;
         const ignored = new Set(this.plugin.settings.ignoredTags);
         const missing = [...collectVaultTags(this.app).entries()]
-            .filter(([tag]) => !tagMap[tag] && !ignored.has(tag))
+            .filter(([tag]) =>
+                !ignored.has(tag) &&
+                !resolveDescription(tagMap, tag, this.plugin.settings.inheritFromParents)
+            )
             .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
         new Setting(container)
@@ -213,6 +216,19 @@ export class TagTooltipSettingTab extends PluginSettingTab {
             );
 
         this.renderTriggerOptions(triggerOptions);
+
+        new Setting(container)
+            .setName('Inherit parent descriptions')
+            .setDesc('Nested tags without their own description show the closest parent\'s, for example #project/alpha shows the description of #project.')
+            .addToggle((t) =>
+                t.setValue(this.plugin.settings.inheritFromParents)
+                    .onChange(async (v) => {
+                        this.plugin.settings.inheritFromParents = v;
+                        await this.plugin.saveSettings();
+                        this.plugin.hideTooltip();
+                        this.display();
+                    })
+            );
 
         new Setting(container)
             .setName('Confirm before deleting')

@@ -14,6 +14,8 @@ export interface TagTooltipSettings {
     /** Tags hidden from the "missing descriptions" list. */
     ignoredTags: string[];
     confirmDelete: boolean;
+    /** Nested tags without their own description show the closest parent's. */
+    inheritFromParents: boolean;
     triggerMode: TriggerMode;
     hoverDelayMs: number;
     modifierKey: ModifierKey;
@@ -23,6 +25,7 @@ export const DEFAULT_SETTINGS: TagTooltipSettings = {
     tagMap: {},
     ignoredTags: [],
     confirmDelete: true,
+    inheritFromParents: true,
     triggerMode: 'hover',
     hoverDelayMs: 50,
     modifierKey: 'alt',

@@ -10,7 +10,7 @@ import {
 } from './settings'
 import { TAG_SELECTORS, TAGS_PROPERTY_SELECTOR, PILL_SELECTOR } from './constants'
 import { TagTooltipSettingTab } from './ui/settingsTab';
-import { formatTag, getTagAtCursor, sanitizeTagMap } from './utils/tagUtils';
+import { formatTag, getTagAtCursor, sanitizeTagMap, resolveDescription } from './utils/tagUtils';
 import { QuickAddModal } from './ui/modals';
 
 export default class TagTooltipsPlugin extends Plugin {
@@ -121,7 +121,7 @@ export default class TagTooltipsPlugin extends Plugin {
         this.registerDomEvent(document, 'mouseover', (evt: MouseEvent) => {
             const tagEl = this.findTagEl(evt.target as Element | null);
             const desc: string | undefined = tagEl
-                ? this.settings.tagMap[this.formatTag(tagEl.textContent ?? '')]
+                ? this.getTooltipText(this.formatTag(tagEl.textContent ?? ''))
                 : undefined;
 
             if (!tagEl || !desc) {
@@ -169,6 +169,20 @@ export default class TagTooltipsPlugin extends Plugin {
         this.registerDomEvent(window, 'blur', () => {
             this.hideTooltip();
         });
+    }
+
+    /** Tooltip text for a tag, or undefined when it has no (inherited) description. */
+    private getTooltipText(tag: string): string | undefined {
+        const resolved = resolveDescription(
+            this.settings.tagMap,
+            tag,
+            this.settings.inheritFromParents
+        );
+        if (!resolved) return undefined;
+
+        return resolved.source === tag
+            ? resolved.description
+            : `${resolved.description}\n(inherited from ${resolved.source})`;
     }
 
     formatTag(text: string): string {
@@ -242,6 +256,9 @@ export default class TagTooltipsPlugin extends Plugin {
             confirmDelete: typeof data.confirmDelete === 'boolean'
                 ? data.confirmDelete
                 : DEFAULT_SETTINGS.confirmDelete,
+            inheritFromParents: typeof data.inheritFromParents === 'boolean'
+                ? data.inheritFromParents
+                : DEFAULT_SETTINGS.inheritFromParents,
             triggerMode: isOneOf(TRIGGER_MODES, data.triggerMode)
                 ? data.triggerMode
                 : DEFAULT_SETTINGS.triggerMode,
