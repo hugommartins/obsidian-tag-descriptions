@@ -12,6 +12,7 @@ export default class TagTooltipsPlugin extends Plugin {
     };
     tooltipEl!: HTMLDivElement;
 
+    private menuItemAdded = false;
     private showTimer: number | null = null;
     private readonly showDelayMs = 50;
 
@@ -92,7 +93,7 @@ export default class TagTooltipsPlugin extends Plugin {
     }
 
     registerHoverEvents() {
-        this.registerDomEvent(activeDocument, 'mouseover', (evt: MouseEvent) => {
+        this.registerDomEvent(document,'mouseover', (evt: MouseEvent) => {
             const tagEl = this.findTagEl(evt.target as Element | null);
 
             if (!tagEl) {
@@ -110,7 +111,7 @@ export default class TagTooltipsPlugin extends Plugin {
             }
         });
 
-        this.registerDomEvent(activeDocument, 'mouseout', (evt: MouseEvent) => {
+        this.registerDomEvent(document,'mouseout', (evt: MouseEvent) => {
             if (!this.findTagEl(evt.relatedTarget as Element | null)) {
                 this.hideTooltip();
             }
@@ -144,9 +145,22 @@ export default class TagTooltipsPlugin extends Plugin {
         return getTagAtCursor(editor);
     }
 
+    /** Checks the menu's (internal) item list for an entry with this title. */
+    private menuHasTitle(menu: Menu, title: string): boolean {
+        const items = (menu as unknown as { items?: { dom?: HTMLElement }[] }).items;
+        return Array.isArray(items) && items.some((i) => i.dom?.textContent === title);
+    }
+
     addTagMenuItem(menu: Menu, tag: string) {
+        // Right-clicking a tag in the editor can fire both `editor-menu` and
+        // `tag-menu` in the same event dispatch; only add the item once.
+        const title = `Set description for ${tag}`;
+        if (this.menuItemAdded || this.menuHasTitle(menu, title)) return;
+        this.menuItemAdded = true;
+        window.setTimeout(() => { this.menuItemAdded = false; }, 0);
+
         menu.addItem((item) => {
-            item.setTitle(`Set description for ${tag}`)
+            item.setTitle(title)
                 .setIcon('tag')
                 .onClick(() => {
                     new QuickAddModal(

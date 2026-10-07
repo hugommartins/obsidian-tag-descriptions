@@ -30,7 +30,7 @@ Requires Obsidian 1.5.0 or later. The plugin is desktop only.
 
 ### Community plugins
 
-The plugin has been submitted to the Obsidian community plugin directory and is pending review. Once approved, install it from **Settings > Community plugins > Browse** by searching for "Tag Descriptions".
+The plugin has been submitted to the Obsidian community plugin directory and is pending review. Not available at the moment
 
 ### BRAT
 
@@ -99,7 +99,7 @@ On import, entries that are not valid tag-to-text pairs are skipped and reported
 
 ## Limitations
 
-- Descriptions are plain text and limited to 100 characters.
+- Descriptions are plain text and limited to 100 characters (per design.)
 - Tag matching is case-sensitive: `#Project` and `#project` are treated as different tags.
 - Hover is the only way to show a tooltip, so touch devices are not supported.
 
@@ -108,10 +108,9 @@ On import, entries that are not valid tag-to-text pairs are skipped and reported
 ### Features
 
 - [ ] Nested tag inheritance
-- [ ] Discover missing descriptions
+- [ ] Discover missing descriptions - list undefined tags by usage with inline add.
 - [ ] Hold a modifier key to show tooltips
-- [ ] Smart tag formatting
-- [ ] Progress bar or visual breadcrumbs
+- [ ] Progress bar - have a visual queue of how many tags on your vault are left without description
 - [ ] Mobile support
 
 ### UI and UX
