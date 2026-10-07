@@ -1,4 +1,12 @@
-import { PluginSettingTab, Setting, App, Notice, debounce } from "obsidian";
+import { PluginSettingTab, Setting, App, Notice, Platform, debounce } from "obsidian";
+import {
+    TRIGGER_MODES,
+    MODIFIER_KEYS,
+    MIN_HOVER_DELAY_MS,
+    MAX_HOVER_DELAY_MS,
+    HOVER_DELAY_STEP_MS,
+    isOneOf,
+} from "src/settings";
 import { MAX_DESC_LENGTH } from "src/constants";
 import { DeleteConfirmModal } from "src/ui/modals";
 import { sanitizeTagMap } from "src/utils/tagUtils";
@@ -87,6 +95,28 @@ export class TagTooltipSettingTab extends PluginSettingTab {
     }
 
     renderPreferences(container: HTMLElement) {
+        const modeWrap = container.createDiv();
+        const triggerOptions = container.createDiv();
+
+        new Setting(modeWrap)
+            .setName('Show tooltip')
+            .setDesc('Choose when a tag description appears.')
+            .addDropdown((d) =>
+                d.addOption('hover', 'On hover')
+                    .addOption('modifier', 'While holding a modifier key')
+                    .setValue(this.plugin.settings.triggerMode)
+                    .onChange(async (v) => {
+                        if (!isOneOf(TRIGGER_MODES, v)) return;
+                        this.plugin.settings.triggerMode = v;
+                        await this.plugin.saveSettings();
+                        this.plugin.hideTooltip();
+                        triggerOptions.empty();
+                        this.renderTriggerOptions(triggerOptions);
+                    })
+            );
+
+        this.renderTriggerOptions(triggerOptions);
+
         new Setting(container)
             .setName('Confirm before deleting')
             .setDesc('Show a confirmation popup before removing a description.')
@@ -94,6 +124,40 @@ export class TagTooltipSettingTab extends PluginSettingTab {
                 t.setValue(this.plugin.settings.confirmDelete)
                     .onChange(async (v) => {
                         this.plugin.settings.confirmDelete = v;
+                        await this.plugin.saveSettings();
+                    })
+            );
+    }
+
+    renderTriggerOptions(container: HTMLElement) {
+        if (this.plugin.settings.triggerMode === 'modifier') {
+            new Setting(container)
+                .setName('Modifier key')
+                .setDesc('Hold this key while pointing at a tag to show its description.')
+                .addDropdown((d) =>
+                    d.addOption('mod', Platform.isMacOS ? 'Cmd' : 'Ctrl')
+                        .addOption('alt', Platform.isMacOS ? 'Option' : 'Alt')
+                        .addOption('shift', 'Shift')
+                        .setValue(this.plugin.settings.modifierKey)
+                        .onChange(async (v) => {
+                            if (!isOneOf(MODIFIER_KEYS, v)) return;
+                            this.plugin.settings.modifierKey = v;
+                            await this.plugin.saveSettings();
+                            this.plugin.hideTooltip();
+                        })
+                );
+            return;
+        }
+
+        new Setting(container)
+            .setName('Hover delay')
+            .setDesc('Time to wait before the description appears, in milliseconds.')
+            .addSlider((s) =>
+                s.setLimits(MIN_HOVER_DELAY_MS, MAX_HOVER_DELAY_MS, HOVER_DELAY_STEP_MS)
+                    .setValue(this.plugin.settings.hoverDelayMs)
+                    .setDynamicTooltip()
+                    .onChange(async (v) => {
+                        this.plugin.settings.hoverDelayMs = v;
                         await this.plugin.saveSettings();
                     })
             );

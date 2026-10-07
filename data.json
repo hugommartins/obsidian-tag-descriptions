@@ -1,5 +1,8 @@
 {
   "confirmDelete": true,
+  "triggerMode": "hover",
+  "modifierKey": "mod",
+  "hoverDelayMs": 1000,
   "tagMap": {
     "#tag": "tag",
     "#✅": "DESCRIPTIN",

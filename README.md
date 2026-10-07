@@ -73,6 +73,13 @@ Use the plugin settings as a master glossary as the vault grows:
 
 ![Plugin settings library](./assets/tag_description_settings.png)
 
+### Choose when tooltips appear
+ 
+Under **Show tooltip** in the plugin settings, pick one of two modes:
+ 
+- **On hover:** the description appears when you point at a tag. Use **Hover delay** (0 to 1000 ms) to wait before it shows.
+- **While holding a modifier key:** the description appears only while you hold the chosen key (**Ctrl or Cmd**, **Alt or Option**, or **Shift**) over a tag. This keeps tooltips out of the way while you read or edit.
+
 ### Frontmatter tags
 
 - Tooltips for frontmatter tags appear in the Properties view, not in source mode.
@@ -101,7 +108,8 @@ On import, entries that are not valid tag-to-text pairs are skipped and reported
 
 - Descriptions are plain text and limited to 100 characters (per design.)
 - Tag matching is case-sensitive: `#Project` and `#project` are treated as different tags.
-- Hover is the only way to show a tooltip, so touch devices are not supported.
+- Tooltips need a pointer (hover or modifier key), so touch devices are not supported.
+- Tooltips work in the main Obsidian window only, not in pop-out windows.
 
 ## Roadmap
 
@@ -109,11 +117,11 @@ On import, entries that are not valid tag-to-text pairs are skipped and reported
 
 - [ ] Nested tag inheritance
 - [ ] Discover missing descriptions - list undefined tags by usage with inline add.
-- [ ] Hold a modifier key to show tooltips
+- [x] Hold a modifier key to show tooltips
 - [ ] Progress bar - have a visual queue of how many tags on your vault are left without description
 - [ ] Mobile support
 
 ### UI and UX
 
-- [ ] Hover delay
+- [x] Hover delay
 - [ ] Styling options

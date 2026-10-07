@@ -1,5 +1,13 @@
-import { Menu, Plugin, Editor, Notice } from 'obsidian';
-import { TagTooltipSettings, DEFAULT_SETTINGS } from './settings'
+import { Menu, Plugin, Editor, Notice, Platform } from 'obsidian';
+import {
+    TagTooltipSettings,
+    DEFAULT_SETTINGS,
+    TRIGGER_MODES,
+    MODIFIER_KEYS,
+    MIN_HOVER_DELAY_MS,
+    MAX_HOVER_DELAY_MS,
+    isOneOf,
+} from './settings'
 import { TAG_SELECTORS, TAGS_PROPERTY_SELECTOR, PILL_SELECTOR } from './constants'
 import { TagTooltipSettingTab } from './ui/settingsTab';
 import { formatTag, getTagAtCursor, sanitizeTagMap } from './utils/tagUtils';
@@ -7,14 +15,15 @@ import { QuickAddModal } from './ui/modals';
 
 export default class TagTooltipsPlugin extends Plugin {
     settings: TagTooltipSettings = {
+        ...DEFAULT_SETTINGS,
         tagMap: {},
-        confirmDelete: DEFAULT_SETTINGS.confirmDelete,
     };
     tooltipEl!: HTMLDivElement;
 
     private menuItemAdded = false;
     private showTimer: number | null = null;
-    private readonly showDelayMs = 50;
+    private hoveredEl: HTMLElement | null = null;
+    private hoveredDesc = '';
 
     onload(): void {
         void this.initialize();
@@ -69,12 +78,16 @@ export default class TagTooltipsPlugin extends Plugin {
         this.tooltipEl?.removeClass('is-active');
     }
 
-    private scheduleShow(target: HTMLElement, desc: string) {
+    private scheduleShow(target: HTMLElement, desc: string, delayMs: number) {
         this.cancelPendingShow();
+        if (delayMs <= 0) {
+            this.showTooltip(target, desc);
+            return;
+        }
         this.showTimer = window.setTimeout(() => {
             this.showTimer = null;
             this.showTooltip(target, desc);
-        }, this.showDelayMs);
+        }, delayMs);
     }
 
     private cancelPendingShow() {
@@ -92,29 +105,68 @@ export default class TagTooltipsPlugin extends Plugin {
         return el;
     }
 
-    registerHoverEvents() {
-        this.registerDomEvent(document,'mouseover', (evt: MouseEvent) => {
-            const tagEl = this.findTagEl(evt.target as Element | null);
+    private isModifierHeld(evt: MouseEvent | KeyboardEvent): boolean {
+        switch (this.settings.modifierKey) {
+            case 'alt':
+                return evt.altKey;
+            case 'shift':
+                return evt.shiftKey;
+            default:
+                return Platform.isMacOS ? evt.metaKey : evt.ctrlKey;
+        }
+    }
 
-            if (!tagEl) {
+    registerHoverEvents() {
+        this.registerDomEvent(document, 'mouseover', (evt: MouseEvent) => {
+            const tagEl = this.findTagEl(evt.target as Element | null);
+            const desc: string | undefined = tagEl
+                ? this.settings.tagMap[this.formatTag(tagEl.textContent ?? '')]
+                : undefined;
+
+            if (!tagEl || !desc) {
+                this.hoveredEl = null;
                 this.hideTooltip();
                 return;
             }
 
-            const tag = this.formatTag(tagEl.textContent ?? '');
-            const desc = this.settings.tagMap[tag];
+            this.hoveredEl = tagEl;
+            this.hoveredDesc = desc;
 
-            if (desc) {
-                this.scheduleShow(tagEl, desc);
+            if (this.settings.triggerMode === 'modifier') {
+                if (this.isModifierHeld(evt)) {
+                    this.showTooltip(tagEl, desc);
+                } else {
+                    this.hideTooltip();
+                }
             } else {
+                this.scheduleShow(tagEl, desc, this.settings.hoverDelayMs);
+            }
+        });
+
+        this.registerDomEvent(document, 'mouseout', (evt: MouseEvent) => {
+            if (!this.findTagEl(evt.relatedTarget as Element | null)) {
+                this.hoveredEl = null;
                 this.hideTooltip();
             }
         });
 
-        this.registerDomEvent(document,'mouseout', (evt: MouseEvent) => {
-            if (!this.findTagEl(evt.relatedTarget as Element | null)) {
+        // Modifier mode: pressing or releasing the key while the pointer rests on a tag.
+        this.registerDomEvent(document, 'keydown', (evt: KeyboardEvent) => {
+            if (this.settings.triggerMode !== 'modifier' || !this.hoveredEl) return;
+            if (this.isModifierHeld(evt)) {
+                this.showTooltip(this.hoveredEl, this.hoveredDesc);
+            }
+        });
+
+        this.registerDomEvent(document, 'keyup', (evt: KeyboardEvent) => {
+            if (this.settings.triggerMode === 'modifier' && !this.isModifierHeld(evt)) {
                 this.hideTooltip();
             }
+        });
+
+        // A key released while the window is unfocused never produces a keyup.
+        this.registerDomEvent(window, 'blur', () => {
+            this.hideTooltip();
         });
     }
 
@@ -183,12 +235,23 @@ export default class TagTooltipsPlugin extends Plugin {
 
     async loadSettings() {
         const loadedData = (await this.loadData()) as Partial<TagTooltipSettings> | null;
+        const data: Partial<TagTooltipSettings> = loadedData ?? {};
+
         this.settings = {
-            confirmDelete: typeof loadedData?.confirmDelete === 'boolean'
-                ? loadedData.confirmDelete
+            confirmDelete: typeof data.confirmDelete === 'boolean'
+                ? data.confirmDelete
                 : DEFAULT_SETTINGS.confirmDelete,
+            triggerMode: isOneOf(TRIGGER_MODES, data.triggerMode)
+                ? data.triggerMode
+                : DEFAULT_SETTINGS.triggerMode,
+            modifierKey: isOneOf(MODIFIER_KEYS, data.modifierKey)
+                ? data.modifierKey
+                : DEFAULT_SETTINGS.modifierKey,
+            hoverDelayMs: typeof data.hoverDelayMs === 'number' && Number.isFinite(data.hoverDelayMs)
+                ? Math.min(MAX_HOVER_DELAY_MS, Math.max(MIN_HOVER_DELAY_MS, data.hoverDelayMs))
+                : DEFAULT_SETTINGS.hoverDelayMs,
             // Drops entries corrupted by earlier imports (e.g. non-string values).
-            tagMap: sanitizeTagMap(loadedData?.tagMap ?? {}).map,
+            tagMap: sanitizeTagMap(data.tagMap ?? {}).map,
         };
     }
 
