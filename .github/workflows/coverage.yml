@@ -33,8 +33,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main
+          git checkout --orphan badges
+          git rm -rf .
           mkdir -p assets
           cp coverage/badge.svg assets/badge.svg
           git add -f assets/badge.svg
-          git diff --staged --quiet || (git commit -m "chore: update coverage badge [skip ci]" && git push)
+          git commit -m "chore: update coverage badge" || exit 0
+          git push -f origin badges

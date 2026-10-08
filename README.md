@@ -6,7 +6,7 @@ An [Obsidian](https://obsidian.md) plugin that lets you assign custom definition
 
 ![License](https://img.shields.io/github/license/hugommartins/obsidian-tag-descriptions?style=flat-square)
 ![Release](https://img.shields.io/github/v/release/hugommartins/obsidian-tag-descriptions?style=flat-square)
-![Coverage](https://raw.githubusercontent.com/hugommartins/obsidian-tag-descriptions/coverage/badge.svg)
+![Coverage](https://raw.githubusercontent.com/hugommartins/obsidian-tag-descriptions/badges/assets/badge.svg)
 
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![Obsidian](https://img.shields.io/badge/Obsidian-%23483699.svg?style=for-the-badge&logo=obsidian&logoColor=white)
