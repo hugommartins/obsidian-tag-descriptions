@@ -3,6 +3,7 @@ name: Coverage Badge
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   coverage:
@@ -14,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -26,17 +27,27 @@ jobs:
       - name: Run tests with coverage
         run: npx vitest run --coverage
 
-      - name: Generate badge
-        run: npx make-coverage-badge
+      - name: Generate flat-square badge SVG
+        run: |
+          node -e '
+            const fs = require("fs");
+            const summary = JSON.parse(fs.readFileSync("coverage/coverage-summary.json", "utf8"));
+            const pct = Math.round(summary.total.lines.pct);
+            const color = pct >= 80 ? "brightgreen" : pct >= 60 ? "yellow" : "red";
+            const url = `https://img.shields.io/badge/coverage-${pct}%25-${color}?style=flat-square`;
+            fetch(url)
+              .then(res => res.text())
+              .then(svg => fs.writeFileSync("/tmp/badge.svg", svg));
+          '
 
-      - name: Commit updated badge to assets
+      - name: Commit and push badge to badges branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout --orphan badges
           git rm -rf .
           mkdir -p assets
-          cp coverage/badge.svg assets/badge.svg
+          cp /tmp/badge.svg assets/badge.svg
           git add -f assets/badge.svg
           git commit -m "chore: update coverage badge" || exit 0
           git push -f origin badges
