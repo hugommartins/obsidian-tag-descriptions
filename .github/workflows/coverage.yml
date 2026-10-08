@@ -26,6 +26,9 @@ jobs:
       - name: Run tests with coverage
         run: npx vitest run --coverage
 
+      - name: Generate badge
+        run: npx make-coverage-badge
+
       - name: Commit updated badge to assets
         run: |
           git config user.name "github-actions[bot]"
