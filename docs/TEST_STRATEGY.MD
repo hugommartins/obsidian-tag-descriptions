@@ -52,7 +52,6 @@ Risks drive where test effort goes. Ordered by impact.
 | R5 | Obsidian API drift breaks internal-API usage (`getClickableTokenAt`, `tag-menu`, menu `items`) | Medium | Guards in code, manual smoke on the latest Obsidian each release |
 | R6 | Slow settings tab on large vaults (the missing-tags scan runs on every open) | Medium | Manual performance check against a large generated vault |
 | R7 | Duplicate or missing context menu items | Low | Component test on `editor-menu` plus `tag-menu` firing together |
-| R8 | Toolchain drift (unpinned `typescript` and `obsidian` versions) breaking build or lint | Low | Pin versions; CI runs type-check, lint and build on every push |
 
 ## 4. Test levels
 
@@ -108,9 +107,8 @@ Every feature has a stable ID, a section below, and named test files. New featur
 | F6 | Tooltip triggers and placement | 5.6 | `tooltipUtils.test.ts` | `tooltip.test.ts` | 4, 5 |
 | F7 | Context menu | 5.7 | `vaultUtils.test.ts` (`getTagAtCursor`) | `contextMenu.test.ts` | 3 |
 | F8 | Settings tab (add, library, preferences) | 5.8 | | `settingsTab.test.ts` | 7, 8 |
-| F9 | Progress bar (roadmap) | 16.1 | planned | planned | planned |
-| F10 | Mobile support (roadmap) | 16.2 | planned | planned | planned |
-| F11 | Styling options (roadmap) | 16.3 | planned | planned | planned |
+| F09 | Mobile support (roadmap) | 16.2 | planned | planned | planned |
+| F10 | Styling options (roadmap) | 16.3 | planned | planned | planned |
 
 ### 5.1 Tag normalization (`formatTag`)
 
@@ -232,21 +230,7 @@ Hardening that has no observed bug behind it (the guard around the internal edit
 - Node.js 20, matching CI.
 - Pin `typescript` and `obsidian` to specific versions instead of `latest`, so type-check and lint results are reproducible.
 
-### 7.2 Proposed layout
-
-```
-test/
-  setup.ts                 # DOM helpers and per-test resets
-  helpers.ts               # createPlugin, event and settings-tab helpers
-  mocks/obsidian.ts        # minimal runtime stub
-  unit/                    # tagUtils, settings, backup, tooltipUtils, vaultUtils
-  component/               # tooltip, contextMenu, settingsTab
-vitest.config.mts
-```
-
-Scripts: `npm test` (run once), `npm run test:watch`, `npm run test:coverage`. Day-to-day instructions are in [TESTING.md](./TESTING.md). Import fixtures are inline in the tests rather than separate files.
-
-### 7.3 Test vault
+### 7.2 Test vault
 
 A small vault kept outside the repo or under `test-vault/` (without `.obsidian/workspace.json`) containing:
 
@@ -258,7 +242,7 @@ A small vault kept outside the repo or under `test-vault/` (without `.obsidian/w
 
 A generated large vault (script that writes 5,000 notes with random tags) is used only for the performance check.
 
-### 7.4 Import fixtures
+### 7.3 Import fixtures
 
 Current-format file, 1.0.0 flat file, file with only `ignoredTags`, file with mixed valid and invalid entries, empty object, array, invalid JSON, file with `__proto__` key.
 
@@ -318,19 +302,7 @@ Run on the current Obsidian release, and on the minimum supported version (1.5.0
 
 Each defect is filed as a GitHub issue with Obsidian version, OS, steps and the plugin version, and recorded in [BUG_LOG.md](./BUG_LOG.md) with its description, root cause and mitigation. Fixes for S1 and S2 require a regression test before merge, recorded in the bug entry.
 
-## 12. Prerequisites and testability work
-
-| # | Work | Status |
-|---|---|---|
-| 1 | Split `tagUtils.ts` into a pure module and `vaultUtils.ts` for Obsidian-dependent helpers | Done |
-| 2 | Move settings normalization into a pure `normalizeSettings(raw)` in `settings.ts` | Done |
-| 3 | Extract backup merging (`backup.ts`) and tooltip placement and modifier mapping (`tooltipUtils.ts`) from the UI code | Done |
-| 4 | Expose `plugin.ready` so tests can wait for load | Done |
-| 5 | Fix the deprecated `moduleResolution` in `tsconfig.json` | Done (`bundler`) |
-| 6 | Add lint and test steps to `.github/workflows/ci.yml` | Done |
-| 7 | Pin `typescript` and `obsidian` instead of `latest` | Pending: choose versions when running `npm install` |
-
-## 13. Phased plan
+## 12. Phased plan
 
 | Phase | Content | Done when |
 |---|---|---|
@@ -434,46 +406,12 @@ Decisions and open questions:
 
 - Moving something out of the out-of-scope list (section 1) requires updating sections 1, 10 (compatibility matrix), 8 (smoke checklist) and 9 (exit criteria) in the same pull request.
 - Dropping a feature removes its tests and its row from the feature map. Do not leave skipped tests behind.
-- A planned test for an open bug stays as an `it.todo` until the fix, then becomes a real test and the bug-log entry is updated.
-
-### 15.7 Periodic review
-
-At each minor release, check that: the feature map is complete; no `it.todo` is older than two releases without a reason; coverage thresholds cover every pure module; the smoke checklist still matches the UI; and the compatibility matrix lists the Obsidian versions actually supported.
 
 ## 16. Planned features: test plans
 
 Test plans for the remaining roadmap items, written before implementation so the design leaves room for them. They are drafts: each one lists prerequisites, cases that will move into section 5 when the feature is built, and questions to settle first.
 
-### 16.1 Progress bar (F9)
-
-Shows how many vault tags have a description.
-
-**Prerequisite refactor.** The missing-descriptions list and the progress bar must never disagree. Extract the calculation from `settingsTab.ts` into a pure `src/utils/coverage.ts`:
-
-- `findMissingTags(vaultTags, tagMap, ignoredTags, inherit)` returns the sorted missing list now built inline.
-- `computeCoverage(...)` returns `{ described, total, percent }` using the same rules.
-
-Unit tests then cover both, and one test asserts that `total - described` equals the length of the missing list for the same input.
-
-| Case | Level |
-|---|---|
-| Counts a tag as described when it has its own description or inherits one (with inheritance on) | U |
-| Ignored tags are excluded from the total, not counted as missing | U |
-| Empty vault: no division by zero, defined result (shown as 100 percent or hidden, per decision) | U |
-| All described: 100 percent; none described: 0 percent | U |
-| Percent rounding is stable at boundaries (for example 1 of 3, 2 of 3) | U |
-| Tags that differ only by case count separately | U |
-| Total includes tags that exist in the vault only, not described tags that no note uses | U |
-| Bar and label render with the computed values | C |
-| Updates after adding a description, ignoring or restoring a tag, importing, and toggling inheritance | C |
-| Bar and missing list agree for the same vault | C |
-| Accessible name or text alternative present | C |
-| Look in light and dark themes, narrow settings pane | M |
-| Performance: shares the single vault scan with the missing list, not a second one | M |
-
-Open questions: what the bar shows for an empty vault; whether it appears on the settings tab only or elsewhere; whether tags covered by inheritance count as described (assumed yes).
-
-### 16.2 Mobile support (F10)
+### 16.1 Mobile support
 
 The plugin is desktop-only today because the tooltip depends on hover, modifier keys and Electron-era behavior. Mobile changes the trigger model, so it is the largest test addition.
 
@@ -500,7 +438,7 @@ Compatibility matrix additions: Obsidian mobile on iOS and on Android, one phone
 
 Open questions: the mobile gesture; whether the modifier mode is removed or replaced on mobile; whether touch devices on desktop count as mobile.
 
-### 16.3 Styling options (F11)
+### 16.2 Styling options
 
 Lets users change how the tooltip looks (for example size, width, colors, position offset).
 

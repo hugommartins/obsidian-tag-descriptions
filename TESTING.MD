@@ -35,26 +35,6 @@ Before a pull request: `npx tsc --noEmit`, `npm run lint`, `npm test`. CI runs t
 
 Component tests load the real `TagTooltipsPlugin` and drive it through DOM events, workspace events and the settings tab. They do not mock the plugin's own modules. Only Obsidian is replaced.
 
-### Layout
-
-```
-test/
-  setup.ts                 # runs before every test file: DOM helpers, resets
-  helpers.ts               # createPlugin, event helpers, settings-tab queries
-  mocks/obsidian.ts        # stand-in for the `obsidian` module
-  unit/
-    tagUtils.test.ts       # formatTag, resolveDescription, sanitizers
-    settings.test.ts       # normalizeSettings, defaults
-    backup.test.ts         # createBackup, mergeBackup, describeImport
-    tooltipUtils.test.ts   # modifier mapping, tooltip placement
-    vaultUtils.test.ts     # collectVaultTags, getTagAtCursor
-  component/
-    tooltip.test.ts        # hover, modifier mode, position, lifecycle
-    contextMenu.test.ts    # menu items, set-description dialog
-    settingsTab.test.ts    # add form, library, missing list, preferences, import, export
-vitest.config.mts          # aliases, environment, coverage thresholds
-```
-
 ### Why a stub for Obsidian
 
 The `obsidian` npm package ships type definitions only; the real implementation exists inside the app. Vitest resolves the `obsidian` import to `test/mocks/obsidian.ts`, which implements just what the plugin uses: `Plugin`, `PluginSettingTab`, `Setting` and its components, `Modal`, `Menu`, `Notice`, `Platform`, `debounce`, `getAllTags`, a minimal `App`, and the DOM helpers Obsidian adds to elements (`createEl`, `createDiv`, `empty`, `addClass`, `setText`, and so on).
@@ -68,7 +48,6 @@ When the plugin starts using a new Obsidian API, add it to the stub in the same 
 ### Naming
 
 - Name tests after the behavior, as a sentence: `shows the description after the configured hover delay`, `rejects a tag name that is only #`.
-- Do not put bug IDs or the word "regression" in test names. The link between a bug and its tests is kept in [BUG_LOG.md](./BUG_LOG.md), using the file, `describe` and test name.
 - Group with `describe` by feature or function (`hover`, `modifier mode`, `import`, `sanitizeTagMap`).
 - One behavior per test. Several `expect` calls are fine when they describe one outcome.
 - Use `it.each` for the same check over several inputs. Use `it.todo('...')` for a planned test whose bug is still open, and turn it into a real test in the fix.

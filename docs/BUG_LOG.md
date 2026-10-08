@@ -2,25 +2,22 @@
 
 Record of behavior bugs found in Tag Descriptions: what happened, why, how it was mitigated, and which test guards against it. Lint, type-check and tooling issues are not logged here. Severity levels (S1 to S4) are defined in [TEST_STRATEGY.md](./TEST_STRATEGY.md#11-defect-management).
 
-**Status values:** Open, Fixed (awaiting verification), Verified (confirmed in Obsidian and covered by a regression test), Won't fix.
-
-Entries below were found on 2026-10-07 during review of version 1.0.0 and the 1.1.0 development work. Fixes for BUG-001 to BUG-006 are targeted at 1.1.0; BUG-007 and BUG-008 are open. None are marked Verified yet: the fixes have not been exercised in Obsidian. The tests listed under each fixed bug are written and pass in the automated suite (see [TESTING.md](./TESTING.md)); the tests for open bugs exist as `it.todo` placeholders until the bugs are fixed.
-
-Tests are named after the behavior they verify, not after the bug. This log is where a bug is tied to its tests, using the file path and the test's describe and test names.
+**Status values:** Open, Fixed, Verified (confirmed in Obsidian and covered by a regression test), Won't fix.
 
 ## Summary
 
 | ID | Title | Severity | Status | Found by |
 |---|---|---|---|---|
-| BUG-001 | Importing the documented backup format crashes the settings tab | S1 | Fixed (awaiting verification) | Code review |
-| BUG-002 | Import and load accept invalid data | S2 | Fixed (awaiting verification) | Code review |
-| BUG-003 | Stale tooltip appears after the pointer leaves a tag | S3 | Fixed (awaiting verification) | Code review |
-| BUG-004 | Alias and other property pills show tag tooltips | S2 | Fixed (awaiting verification) | Code review |
-| BUG-005 | Editing a tag can save an empty key | S3 | Fixed (awaiting verification) | Code review |
-| BUG-006 | "Set description" appears twice in the context menu | S3 | Fixed (awaiting verification) | User report |
-| BUG-007 | Tooltip may not show when hovering the `#` of a tag in Live Preview (unconfirmed) | S4 | Open | Code review |
-| BUG-008 | Tooltips do not work in pop-out windows | S3 | Open | Code review |
-| BUG-009 | Loading a corrupted tag map discards valid descriptions | S1 | Fixed (awaiting verification) | Automated test run |
+| BUG-001 | Importing the documented backup format crashes the settings tab | S1 | Verified | Code review |
+| BUG-002 | Import and load accept invalid data | S2 | Verified | Code review |
+| BUG-003 | Stale tooltip appears after the pointer leaves a tag | S3 | Verified | Code review |
+| BUG-004 | Alias and other property pills show tag tooltips | S2 | Verified | Code review |
+| BUG-005 | Editing a tag can save an empty key | S3 | Verified | Code review |
+| BUG-006 | "Set description" appears twice in the context menu | S3 | Verified | Manual test |
+| BUG-007 | Tooltips do not work in pop-out windows | S3 | Won't do | Code review |
+| BUG-008 | Loading a corrupted tag map discards valid descriptions | S1 | Verified | Automated test run |
+| BUG-009 | Difference in hover delay between regular tag and nested tags | S4 | Open | Manual test |
+| BUG-010 | Descriptions added via right-click on tags and similar nested tags are not assumed in the settings for the regular tag | S3| Open | Manual test |
 
 ## Details
 
@@ -107,19 +104,7 @@ Tests are named after the behavior they verify, not after the bug. This log is w
   - Manual check in Live Preview, Source mode, Reading view and the tag pane.
 - **Note:** The item-list check reads an internal property of Obsidian's menu; the same-dispatch flag keeps working if that property disappears.
 
-### BUG-007: Tooltip may not show when hovering the `#` of a tag in Live Preview (unconfirmed)
-
-- **Severity:** S4
-- **Status:** Open
-- **Affected:** `src/main.ts` (hover handling), `src/constants.ts` (tag selectors)
-- **Description:** In Live Preview, Obsidian can render a tag as separate elements, with the leading `#` in its own element. Hovering an element that contains only `#` resolves to an empty tag after normalization, so no tooltip would appear until the pointer moves onto the rest of the tag. Not reproduced yet.
-- **Root cause (suspected):** The tag is read from the text of the hovered element only, not from the whole tag.
-- **Mitigation (proposed):** Confirm in Live Preview first. If confirmed, resolve the full tag by joining the adjacent tag elements, or by reading from the parent tag element.
-- **Regression tests (`it.todo` placeholder, enable if confirmed):**
-  - `test/component/tooltip.test.ts` › hover › "shows the tooltip when the pointer is over the # of a split tag" (`it.todo`)
-  - Manual check in Live Preview with a short and a nested tag.
-
-### BUG-008: Tooltips do not work in pop-out windows
+### BUG-007: Tooltips do not work in pop-out windows
 
 - **Severity:** S3
 - **Status:** Open
@@ -131,7 +116,7 @@ Tests are named after the behavior they verify, not after the bug. This log is w
   - `test/component/tooltip.test.ts` › windows › "shows the tooltip for a tag in a pop-out window" (`it.todo`)
   - Manual check: open a note in a pop-out window and hover a described tag in both Hover and modifier modes.
 
-### BUG-009: Loading a corrupted tag map discards valid descriptions
+### BUG-008: Loading a corrupted tag map discards valid descriptions
 
 - **Severity:** S1
 - **Status:** Fixed (awaiting verification)
@@ -143,6 +128,28 @@ Tests are named after the behavior they verify, not after the bug. This log is w
 - **Regression tests:**
   - `test/unit/settings.test.ts` › settings loading › "drops corrupted tagMap entries and keeps valid ones"
   - `test/unit/tagUtils.test.ts` › `sanitizeFlatTagMap` › "treats a key named tagMap as an invalid entry, not as a wrapper"
+
+### BUG-009: Difference in hover delay between regular tag and nested tags
+
+- **Severity:** S4
+- **Status:** Open
+- **Affected:** files or areas
+- **Description:** Having a regular tag and a nested tag on read and live view produce a difference in the hover delay for the description to appear, with the nested tag having a higher delay. Likely related to BUG-010, see entry below for more information
+- **Root cause:** Why it happens.
+- **Mitigation:** What was changed, or the proposed change.
+- **Found by:** Manual tests on the live preview
+- **Regression tests:** File path and describe and test names of the tests that prevent it from returning, plus any manual check.
+
+### BUG-010: Descriptions added via right-click on tags and similar nested tags are not assumed in the settings for the regular tag
+
+- **Severity:** S3
+- **Status:** Open
+- **Affected:** files or areas
+- **Description:** Adding the tag for `tag` and for `tag/nested` via right click on the editor works at first glance if the user open the description setting page the `tag` description does not exist. Adding via settings for both will not cause any problems
+- **Root cause:** Why it happens.
+- **Mitigation:** What was changed, or the proposed change.
+- **Found by:** Manual tests
+- **Regression tests:** File path and describe and test names of the tests that prevent it from returning, plus any manual check.
 
 ## Template for new entries
 
@@ -159,4 +166,4 @@ Tests are named after the behavior they verify, not after the bug. This log is w
 - **Regression tests:** File path and describe and test names of the tests that prevent it from returning, plus any manual check.
 ```
 
-Add the row to the summary table. Name the tests after the behavior, and record them here rather than putting the bug ID in the test name.
+Add the row to the summary table. Name the tests after the behavior, and record them here.
