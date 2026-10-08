@@ -275,7 +275,6 @@ export class TagTooltipSettingTab extends PluginSettingTab {
             .addSlider((s) =>
                 s.setLimits(MIN_HOVER_DELAY_MS, MAX_HOVER_DELAY_MS, HOVER_DELAY_STEP_MS)
                     .setValue(this.plugin.settings.hoverDelayMs)
-                    .setDynamicTooltip()
                     .onChange(async (v) => {
                         this.plugin.settings.hoverDelayMs = v;
                         await this.plugin.saveSettings();
