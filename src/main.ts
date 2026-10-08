@@ -1,17 +1,11 @@
 import { Menu, Plugin, Editor, Notice, Platform } from 'obsidian';
-import {
-    TagTooltipSettings,
-    DEFAULT_SETTINGS,
-    TRIGGER_MODES,
-    MODIFIER_KEYS,
-    MIN_HOVER_DELAY_MS,
-    MAX_HOVER_DELAY_MS,
-    isOneOf,
-} from './settings'
-import { TAG_SELECTORS, TAGS_PROPERTY_SELECTOR, PILL_SELECTOR } from './constants'
+import { TagTooltipSettings, DEFAULT_SETTINGS, normalizeSettings } from './settings';
+import { TAG_SELECTORS, TAGS_PROPERTY_SELECTOR, PILL_SELECTOR } from './constants';
 import { TagTooltipSettingTab } from './ui/settingsTab';
-import { formatTag, getTagAtCursor, sanitizeTagMap, resolveDescription } from './utils/tagUtils';
 import { QuickAddModal } from './ui/modals';
+import { formatTag, getTooltipText } from './utils/tagUtils';
+import { getTagAtCursor } from './utils/vaultUtils';
+import { computeTooltipPosition, isModifierHeld } from './utils/tooltipUtils';
 
 export default class TagTooltipsPlugin extends Plugin {
     settings: TagTooltipSettings = {
@@ -26,8 +20,11 @@ export default class TagTooltipsPlugin extends Plugin {
     private hoveredEl: HTMLElement | null = null;
     private hoveredDesc = '';
 
+    /** Resolves once settings are loaded and every listener is registered. */
+    ready: Promise<void> = Promise.resolve();
+
     onload(): void {
-        void this.initialize();
+        this.ready = this.initialize();
     }
 
     onunload(): void {
@@ -55,17 +52,11 @@ export default class TagTooltipsPlugin extends Plugin {
         this.tooltipEl.addClass('is-active');
 
         const rect = target.getBoundingClientRect();
-        const offset = 2;
-        const padding = 15;
-
-        let top = rect.top - this.tooltipEl.offsetHeight - offset;
-        if (top < 0) top = rect.bottom + offset;
-
-        let left = rect.left;
-        const maxLeft = window.innerWidth - this.tooltipEl.offsetWidth - padding;
-
-        if (left > maxLeft) left = maxLeft;
-        if (left < padding) left = padding;
+        const { top, left } = computeTooltipPosition(
+            rect,
+            { width: this.tooltipEl.offsetWidth, height: this.tooltipEl.offsetHeight },
+            window.innerWidth
+        );
 
         Object.assign(this.tooltipEl.style, {
             top: `${top}px`,
@@ -107,21 +98,18 @@ export default class TagTooltipsPlugin extends Plugin {
     }
 
     private isModifierHeld(evt: MouseEvent | KeyboardEvent): boolean {
-        switch (this.settings.modifierKey) {
-            case 'alt':
-                return evt.altKey;
-            case 'shift':
-                return evt.shiftKey;
-            default:
-                return Platform.isMacOS ? evt.metaKey : evt.ctrlKey;
-        }
+        return isModifierHeld(evt, this.settings.modifierKey, Platform.isMacOS);
     }
 
     registerHoverEvents() {
         this.registerDomEvent(document, 'mouseover', (evt: MouseEvent) => {
             const tagEl = this.findTagEl(evt.target as Element | null);
             const desc: string | undefined = tagEl
-                ? this.getTooltipText(this.formatTag(tagEl.textContent ?? ''))
+                ? getTooltipText(
+                    this.settings.tagMap,
+                    formatTag(tagEl.textContent ?? ''),
+                    this.settings.inheritFromParents
+                )
                 : undefined;
 
             if (!tagEl || !desc) {
@@ -171,28 +159,10 @@ export default class TagTooltipsPlugin extends Plugin {
         });
     }
 
-    /** Tooltip text for a tag, or undefined when it has no (inherited) description. */
-    private getTooltipText(tag: string): string | undefined {
-        const resolved = resolveDescription(
-            this.settings.tagMap,
-            tag,
-            this.settings.inheritFromParents
-        );
-        if (!resolved) return undefined;
-
-        return resolved.source === tag
-            ? resolved.description
-            : `${resolved.description}\n(inherited from ${resolved.source})`;
-    }
-
-    formatTag(text: string): string {
-        return formatTag(text);
-    }
-
     registerContextMenu() {
         this.registerEvent(
             this.app.workspace.on('editor-menu', (menu: Menu, editor: Editor) => {
-                const tag = this.getTagAtCursor(editor);
+                const tag = getTagAtCursor(editor);
                 if (tag) {
                     this.addTagMenuItem(menu, tag);
                 }
@@ -207,9 +177,6 @@ export default class TagTooltipsPlugin extends Plugin {
                 }
             })
         );
-    }
-    getTagAtCursor(editor: Editor): string | null {
-        return getTagAtCursor(editor);
     }
 
     /** Checks the menu's (internal) item list for an entry with this title. */
@@ -249,36 +216,7 @@ export default class TagTooltipsPlugin extends Plugin {
     }
 
     async loadSettings() {
-        const loadedData = (await this.loadData()) as Partial<TagTooltipSettings> | null;
-        const data: Partial<TagTooltipSettings> = loadedData ?? {};
-
-        this.settings = {
-            confirmDelete: typeof data.confirmDelete === 'boolean'
-                ? data.confirmDelete
-                : DEFAULT_SETTINGS.confirmDelete,
-            inheritFromParents: typeof data.inheritFromParents === 'boolean'
-                ? data.inheritFromParents
-                : DEFAULT_SETTINGS.inheritFromParents,
-            triggerMode: isOneOf(TRIGGER_MODES, data.triggerMode)
-                ? data.triggerMode
-                : DEFAULT_SETTINGS.triggerMode,
-            modifierKey: isOneOf(MODIFIER_KEYS, data.modifierKey)
-                ? data.modifierKey
-                : DEFAULT_SETTINGS.modifierKey,
-            hoverDelayMs: typeof data.hoverDelayMs === 'number' && Number.isFinite(data.hoverDelayMs)
-                ? Math.min(MAX_HOVER_DELAY_MS, Math.max(MIN_HOVER_DELAY_MS, data.hoverDelayMs))
-                : DEFAULT_SETTINGS.hoverDelayMs,
-            // Drops entries corrupted by earlier imports (e.g. non-string values).
-            tagMap: sanitizeTagMap(data.tagMap ?? {}).map,
-            ignoredTags: Array.isArray(data.ignoredTags)
-                ? [...new Set(
-                    (data.ignoredTags as unknown[])
-                        .filter((t): t is string => typeof t === 'string')
-                        .map((t) => formatTag(t))
-                        .filter((t) => t.length >= 2)
-                )]
-                : [],
-        };
+        this.settings = normalizeSettings(await this.loadData());
     }
 
     async saveSettings() {

@@ -1,26 +1,11 @@
-import { App, Editor, getAllTags } from 'obsidian';
-
-interface ClickableToken {
-    type: string;
-    text: string;
-}
-
-type InternalEditor = Editor & {
-    getClickableTokenAt?: (cursor: { line: number; ch: number }) => ClickableToken | null;
-};
+/**
+ * Pure tag helpers. This module must not import from `obsidian`, so it can be
+ * unit tested without the app. Obsidian-dependent helpers live in `vaultUtils.ts`.
+ */
 
 export function formatTag(text = ''): string {
     const clean = text.replace(/#/g, '').trim();
     return clean ? `#${clean}` : '';
-}
-
-export function getTagAtCursor(editor: Editor): string | null {
-    const internalEditor = editor as InternalEditor;
-    // Internal Obsidian API: may disappear in a future release.
-    if (typeof internalEditor.getClickableTokenAt !== 'function') return null;
-
-    const token = internalEditor.getClickableTokenAt(editor.getCursor());
-    return token && token.type === 'tag' ? token.text : null;
 }
 
 export interface ResolvedDescription {
@@ -53,43 +38,50 @@ export function resolveDescription(
     }
 }
 
-/** Maps every tag used in the vault (inline and frontmatter) to the number of notes using it. */
-export function collectVaultTags(app: App): Map<string, number> {
-    const counts = new Map<string, number>();
+/** Tooltip text for a tag, or undefined when it has no (inherited) description. */
+export function getTooltipText(
+    tagMap: Record<string, string>,
+    tag: string,
+    inherit: boolean
+): string | undefined {
+    const resolved = resolveDescription(tagMap, tag, inherit);
+    if (!resolved) return undefined;
 
-    for (const file of app.vault.getMarkdownFiles()) {
-        const cache = app.metadataCache.getFileCache(file);
-        const tags = cache ? getAllTags(cache) : null;
-        if (!tags) continue;
+    return resolved.source === tag
+        ? resolved.description
+        : `${resolved.description}\n(inherited from ${resolved.source})`;
+}
 
-        for (const tag of new Set(tags)) {
-            counts.set(tag, (counts.get(tag) ?? 0) + 1);
-        }
-    }
+/** Normalizes a list of ignored tags: strings only, `#tag` format, no duplicates. */
+export function sanitizeIgnoredTags(raw: unknown): string[] {
+    if (!Array.isArray(raw)) return [];
 
-    return counts;
+    const tags = (raw as unknown[])
+        .filter((t): t is string => typeof t === 'string')
+        .map((t) => formatTag(t))
+        .filter((t) => t.length >= 2);
+
+    return [...new Set(tags)];
+}
+
+type SanitizedMap = { map: Record<string, string>; skipped: number };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
- * Keeps only valid `tag -> description` entries. Keys are normalised to `#tag`,
- * values must be non-empty strings. Accepts a flat map or a `{ tagMap: {...} }`
- * wrapper (the format older docs described).
+ * Keeps only valid `tag -> description` entries of a flat object. Keys are
+ * normalised to `#tag`, values must be non-empty strings. A key named `tagMap`
+ * is just another (invalid) entry here. Use this for data that is known to be
+ * a tag map, such as the saved settings.
  */
-export function sanitizeTagMap(raw: unknown): { map: Record<string, string>; skipped: number } {
+export function sanitizeFlatTagMap(raw: unknown): SanitizedMap {
     const map: Record<string, string> = {};
     let skipped = 0;
+    if (!isPlainObject(raw)) return { map, skipped };
 
-    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-        return { map, skipped };
-    }
-
-    const source = (raw as { tagMap?: unknown }).tagMap ?? raw;
-    if (typeof source !== 'object' || source === null || Array.isArray(source)) {
-        return { map, skipped };
-    }
-
-    const entries = Object.entries(source as Record<string, unknown>) as [string, unknown][];
-    for (const [key, value] of entries) {
+    for (const [key, value] of Object.entries(raw)) {
         const tag = formatTag(key);
         const desc = typeof value === 'string' ? value.trim() : '';
         if (tag.length < 2 || !desc) {
@@ -100,4 +92,16 @@ export function sanitizeTagMap(raw: unknown): { map: Record<string, string>; ski
     }
 
     return { map, skipped };
+}
+
+/**
+ * Reads the tag map out of an imported file. Accepts a flat map (1.0.0
+ * backups) or a `{ tagMap, ignoredTags }` backup object, from which only
+ * `tagMap` is read.
+ */
+export function sanitizeTagMap(raw: unknown): SanitizedMap {
+    if (!isPlainObject(raw)) return { map: {}, skipped: 0 };
+
+    const isBackupObject = 'tagMap' in raw || 'ignoredTags' in raw;
+    return sanitizeFlatTagMap(isBackupObject ? raw.tagMap ?? {} : raw);
 }

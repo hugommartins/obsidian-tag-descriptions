@@ -6,7 +6,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "allowJs": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "lib": ["DOM", "DOM.Iterable","ESNext"],
     "types": ["node"],

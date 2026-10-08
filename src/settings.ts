@@ -1,3 +1,5 @@
+import { sanitizeIgnoredTags, sanitizeFlatTagMap } from './utils/tagUtils';
+
 export const TRIGGER_MODES = ['hover', 'modifier'] as const;
 export type TriggerMode = typeof TRIGGER_MODES[number];
 
@@ -33,4 +35,38 @@ export const DEFAULT_SETTINGS: TagTooltipSettings = {
 
 export function isOneOf<T extends string>(list: readonly T[], value: unknown): value is T {
     return typeof value === 'string' && (list as readonly string[]).includes(value);
+}
+
+/**
+ * Builds valid settings from whatever `loadData()` returned: missing or
+ * malformed fields fall back to defaults, numbers are clamped, and entries
+ * corrupted by earlier imports are dropped.
+ */
+export function normalizeSettings(raw: unknown): TagTooltipSettings {
+    const data: Partial<Record<keyof TagTooltipSettings, unknown>> =
+        typeof raw === 'object' && raw !== null && !Array.isArray(raw)
+            ? (raw as Partial<Record<keyof TagTooltipSettings, unknown>>)
+            : {};
+
+    return {
+        confirmDelete: typeof data.confirmDelete === 'boolean'
+            ? data.confirmDelete
+            : DEFAULT_SETTINGS.confirmDelete,
+        inheritFromParents: typeof data.inheritFromParents === 'boolean'
+            ? data.inheritFromParents
+            : DEFAULT_SETTINGS.inheritFromParents,
+        triggerMode: isOneOf(TRIGGER_MODES, data.triggerMode)
+            ? data.triggerMode
+            : DEFAULT_SETTINGS.triggerMode,
+        modifierKey: isOneOf(MODIFIER_KEYS, data.modifierKey)
+            ? data.modifierKey
+            : DEFAULT_SETTINGS.modifierKey,
+        hoverDelayMs: typeof data.hoverDelayMs === 'number' && Number.isFinite(data.hoverDelayMs)
+            ? Math.min(MAX_HOVER_DELAY_MS, Math.max(MIN_HOVER_DELAY_MS, data.hoverDelayMs))
+            : DEFAULT_SETTINGS.hoverDelayMs,
+        // Flat on purpose: a stored map is never a backup wrapper, and a corrupted
+        // one (from the 1.0.0 import bug) can contain a literal "tagMap" key.
+        tagMap: sanitizeFlatTagMap(data.tagMap).map,
+        ignoredTags: sanitizeIgnoredTags(data.ignoredTags),
+    };
 }

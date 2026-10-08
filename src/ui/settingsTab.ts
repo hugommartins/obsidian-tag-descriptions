@@ -9,7 +9,9 @@ import {
 } from "src/settings";
 import { MAX_DESC_LENGTH } from "src/constants";
 import { DeleteConfirmModal, QuickAddModal } from "src/ui/modals";
-import { sanitizeTagMap, collectVaultTags, resolveDescription } from "src/utils/tagUtils";
+import { formatTag, resolveDescription } from "src/utils/tagUtils";
+import { collectVaultTags } from "src/utils/vaultUtils";
+import { createBackup, mergeBackup, describeImport } from "../../src/utils/backup";
 import type TagTooltipsPlugin from '../main';
 
 const MISSING_PREVIEW_LIMIT = 50;
@@ -24,7 +26,12 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         super(app, plugin);
     }
 
+    /** Obsidian entry point. Internal code calls `render()`, since `display()` is deprecated from 1.13. */
     display(): void {
+        this.render();
+    }
+
+    render(): void {
         const { containerEl } = this;
         containerEl.empty();
 
@@ -67,7 +74,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
                             new QuickAddModal(this.app, tag, '', async (desc) => {
                                 this.plugin.settings.tagMap[tag] = desc;
                                 await this.plugin.saveSettings();
-                                this.display();
+                                this.render();
                                 new Notice(`Tooltip for ${tag} saved!`);
                             }).open();
                         })
@@ -78,7 +85,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
                             .onClick(async () => {
                                 this.plugin.settings.ignoredTags.push(tag);
                                 await this.plugin.saveSettings();
-                                this.display();
+                                this.render();
                             })
                     );
             }
@@ -88,7 +95,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
                     b.setButtonText(this.showAllMissing ? 'Show fewer' : `Show all ${missing.length}`)
                         .onClick(() => {
                             this.showAllMissing = !this.showAllMissing;
-                            this.display();
+                            this.render();
                         })
                 );
             }
@@ -107,7 +114,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
             .addButton((b) =>
                 b.setButtonText(this.showIgnored ? 'Hide' : 'Show').onClick(() => {
                     this.showIgnored = !this.showIgnored;
-                    this.display();
+                    this.render();
                 })
             );
 
@@ -124,7 +131,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
                             this.plugin.settings.ignoredTags =
                                 this.plugin.settings.ignoredTags.filter((t) => t !== tag);
                             await this.plugin.saveSettings();
-                            this.display();
+                            this.render();
                         })
                 );
         }
@@ -141,7 +148,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         let descVal = "";
         
         const saveAction = async () => {
-            const tag = this.plugin.formatTag(tagVal.trim());
+            const tag = formatTag(tagVal.trim());
             const desc = descVal.trim();
 
             if (!tag || tag.length < 2) { new Notice('Invalid tag'); return; }
@@ -150,7 +157,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
 
             this.plugin.settings.tagMap[tag] = desc;
             await this.plugin.saveSettings();
-            this.display();
+            this.render();
             new Notice(`Added ${tag}`);
         };
 
@@ -226,7 +233,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
                         this.plugin.settings.inheritFromParents = v;
                         await this.plugin.saveSettings();
                         this.plugin.hideTooltip();
-                        this.display();
+                        this.render();
                     })
             );
 
@@ -302,7 +309,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
     renderList(container: HTMLElement) {
         container.empty();
         const tagMap: Record<string, string> = this.plugin.settings.tagMap;
-        const entries = (Object.entries(tagMap) as [string, string][]).filter(
+        const entries = Object.entries(tagMap).filter(
             ([tag, desc]) =>
                 tag.toLowerCase().includes(this.searchQuery) ||
                 desc.toLowerCase().includes(this.searchQuery)
@@ -324,7 +331,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         const s = new Setting(container);
         s.settingEl.addClass('tag-library-item');
         s.setName(tag).setDesc(desc);
-        s.addExtraButton((b) => b.setIcon('pencil').onClick(() => { this.editingTag = tag; this.display(); }));
+        s.addExtraButton((b) => b.setIcon('pencil').onClick(() => { this.editingTag = tag; this.render(); }));
         s.addExtraButton((b) => b.setIcon('trash-2').onClick(() => this.deleteTag(tag)));
     }
 
@@ -351,7 +358,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         }, 0);
 
         const save = async () => {
-            const newTag = this.plugin.formatTag(tagInput.value.trim());
+            const newTag = formatTag(tagInput.value.trim());
             const newDesc = descInput.value.trim();
             if (newTag.length < 2) { new Notice('Invalid tag'); return; }
             if (!newDesc) { new Notice('Description cannot be empty!'); return; }
@@ -366,7 +373,7 @@ export class TagTooltipSettingTab extends PluginSettingTab {
             this.plugin.settings.tagMap = newMap;
             await this.plugin.saveSettings();
             this.editingTag = null;
-            this.display();
+            this.render();
         };
 
         [tagInput, descInput].forEach((el) => {
@@ -380,14 +387,14 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         });
 
         s.addExtraButton((b) => b.setIcon('check').onClick(() => { void save(); }));
-        s.addExtraButton((b) => b.setIcon('x').onClick(() => { this.editingTag = null; this.display(); }));
+        s.addExtraButton((b) => b.setIcon('x').onClick(() => { this.editingTag = null; this.render(); }));
     }
 
     deleteTag(tag: string) {
         const perform = async () => {
             delete this.plugin.settings.tagMap[tag];
             await this.plugin.saveSettings();
-            this.display();
+            this.render();
             new Notice(`${tag} deleted.`);
         };
         if (!this.plugin.settings.confirmDelete) {
@@ -400,7 +407,8 @@ export class TagTooltipSettingTab extends PluginSettingTab {
     }
 
     exportLibrary() {
-        const blob = new Blob([JSON.stringify(this.plugin.settings.tagMap, null, 2)], { type: 'application/json' });
+        const backup = createBackup(this.plugin.settings);
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -414,32 +422,33 @@ export class TagTooltipSettingTab extends PluginSettingTab {
         input.type = 'file';
         input.accept = '.json';
         input.onchange = async (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            const file = target.files?.[0];
+            const file = (e.target as HTMLInputElement).files?.[0];
             if (!file) return;
-            let data: unknown;
-            try {
-                data = JSON.parse(await file.text());
-            } catch {
-                new Notice('Invalid JSON file.');
-                return;
-            }
-
-            const { map, skipped } = sanitizeTagMap(data);
-            const imported = Object.keys(map).length;
-            if (!imported) {
-                new Notice('No valid tag descriptions found in file.');
-                return;
-            }
-
-            Object.assign(this.plugin.settings.tagMap, map);
-            await this.plugin.saveSettings();
-            this.display();
-            new Notice(skipped
-                ? `Imported ${imported} tags, skipped ${skipped} invalid entries.`
-                : `Imported ${imported} tags.`);
+            await this.importFromText(await file.text());
         };
         input.click();
     }
 
+    /** Parses backup JSON and merges it into the current settings. */
+    async importFromText(text: string) {
+        let data: unknown;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            new Notice('Invalid JSON file.');
+            return;
+        }
+
+        const result = mergeBackup(this.plugin.settings, data);
+        if (!result.imported && !result.importedIgnored) {
+            new Notice('No valid tag descriptions found in file.');
+            return;
+        }
+
+        this.plugin.settings.tagMap = result.tagMap;
+        this.plugin.settings.ignoredTags = result.ignoredTags;
+        await this.plugin.saveSettings();
+        this.render();
+        new Notice(describeImport(result));
+    }
 }
